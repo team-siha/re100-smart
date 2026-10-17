@@ -150,42 +150,127 @@ function icon(name, extraClass) {
 }
 
 // ---------------------------------------------------------------------
-// 캐릭터 메뉴 아이콘: 우리 채소·과자 캐릭터 얼굴 + 메뉴에 맞는 소품
+// 메뉴 그림: 우리 채소·과자 캐릭터로 만든 작은 장면들 (viewBox 100x100)
 // ---------------------------------------------------------------------
-const PROPS = {
-  camera: '<rect x="3" y="7" width="18" height="13" rx="4" fill="#5fbfa2"/><rect x="8" y="4" width="8" height="4" rx="2" fill="#5fbfa2"/><circle cx="12" cy="13.5" r="4" fill="#fff"/><circle cx="12" cy="13.5" r="2.2" fill="#8edcc3"/>',
-  medal: '<path d="M7 2 L10 10 L12 8.5 L14 10 L17 2" fill="#8fd19e"/><circle cx="12" cy="15" r="7" fill="#ffc94d"/><path d="M12 11 L13.2 13.6 L16 13.9 L13.9 15.7 L14.5 18.4 L12 17 L9.5 18.4 L10.1 15.7 L8 13.9 L10.8 13.6 Z" fill="#fff"/>',
-  moon: '<path d="M15 3 A9 9 0 1 0 21 15 A7 7 0 1 1 15 3Z" fill="#ffd96b"/><circle cx="7" cy="6" r="1.2" fill="#ffd96b"/>',
-  bubble: '<path d="M4 5 H20 A2 2 0 0 1 22 7 V15 A2 2 0 0 1 20 17 H11 L6 21 V17 H4 A2 2 0 0 1 2 15 V7 A2 2 0 0 1 4 5Z" fill="#ffbf94"/><circle cx="8" cy="11" r="1.5" fill="#fff"/><circle cx="12" cy="11" r="1.5" fill="#fff"/><circle cx="16" cy="11" r="1.5" fill="#fff"/>',
-  sprout: '<path d="M4 5 H20 A2 2 0 0 1 22 7 V15 A2 2 0 0 1 20 17 H11 L6 21 V17 H4 A2 2 0 0 1 2 15 V7 A2 2 0 0 1 4 5Z" fill="#8edcc3"/><path d="M12 15 V10" stroke="#fff" stroke-width="2" stroke-linecap="round"/><path d="M12 11 C9 11 8 9 8.3 7.5 C10.5 7.5 12 9 12 11Z" fill="#fff"/><path d="M12 10.5 C15 10.5 16 8.5 15.7 7 C13.5 7 12 8.5 12 10.5Z" fill="#fff"/>',
-  star: '<path d="M12 2 L14.8 8 L21.5 8.8 L16.5 13.4 L17.9 20 L12 16.7 L6.1 20 L7.5 13.4 L2.5 8.8 L9.2 8 Z" fill="#ffc94d"/><path d="M8.8 12.4 L11 14.6 L15.4 10.2" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
-  spoon: '<ellipse cx="8" cy="7" rx="3.5" ry="5" fill="#ffbf94"/><rect x="7" y="11" width="2" height="11" rx="1" fill="#ffbf94"/><path d="M15 2 V9 M17 2 V9 M19 2 V9 M15 9 Q17 12 19 9" stroke="#8fd19e" stroke-width="1.6" fill="none" stroke-linecap="round"/><rect x="16" y="10" width="2" height="12" rx="1" fill="#8fd19e"/>',
-  heart: '<path d="M12 21 C5 16 2 12 2 8.5 A4.5 4.5 0 0 1 12 6 A4.5 4.5 0 0 1 22 8.5 C22 12 19 16 12 21Z" fill="#ff9c8a"/><path d="M7 8 C7.5 6.8 8.5 6.3 9.5 6.4" stroke="#fff" stroke-width="1.5" fill="none" stroke-linecap="round"/>',
-  cart: '<path d="M2 4 H5 L7.5 15 H18 L20.5 7 H6.5" stroke="#ff9a5c" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 8 H19.5 L17.5 14 H8.3Z" fill="#ffbf94"/><circle cx="9" cy="19" r="2" fill="#ff9a5c"/><circle cx="17" cy="19" r="2" fill="#ff9a5c"/>',
-};
 
-const CHAR_ICONS = {
-  profile: { img: "jeokSangchu", bg: "#ffe3dc", prop: "heart" },
-  record: { img: "mint", bg: "#d9f3ea", prop: "camera" },
-  cert: { img: "basil", bg: "#fff1bf", prop: "medal" },
-  room: { img: "sleep/cheongSangchu", bg: "#e6ecff", prop: "moon" },
-  lounge: { img: "yangparing", bg: "#e7f6d3", prop: "bubble" },
-  chat: { img: "romaine", bg: "#e0f5ec", prop: "sprout" },
-  mission: { img: "cheongSangchu", bg: "#fff4c9", prop: "star" },
-  recipe: { img: "cheonggyeongchae", bg: "#fdebd8", prop: "spoon" },
-  cart: { img: "pokachip", bg: "#ffe9d9", prop: "cart" },
-};
-
-function charIcon(name) {
-  const c = CHAR_ICONS[name] || CHAR_ICONS.mission;
+// 캐릭터 이미지 (정사각 칸 x,y,w 안에 아래쪽 맞춤)
+function artImg(id, x, y, w, extra) {
   return (
-    '<span class="char-ic" style="--ci-bg:' + c.bg + '">' +
-    '<span class="ci-face"><img src="images/chars/' + c.img + '.webp" alt="" /></span>' +
-    '<span class="ci-prop"><svg viewBox="0 0 24 24" aria-hidden="true">' + PROPS[c.prop] + "</svg></span></span>"
+    '<image href="images/chars/' + id + '.webp" x="' + x + '" y="' + y + '" width="' + w + '" height="' + w +
+    '" preserveAspectRatio="xMidYMax meet"' + (extra || "") + "/>"
   );
 }
 
-// data-icon="이름" → 동글 아이콘, data-char-icon="이름" → 캐릭터 아이콘
+function artBg(color) {
+  return '<rect width="100" height="100" rx="24" fill="' + color + '"/>';
+}
+
+const MENU_ART = {
+  // MBTI 글자 옆에 상추 친구
+  profile: () =>
+    artBg("#ffe9e3") +
+    '<g font-family="Pretendard, sans-serif" font-weight="900" font-size="27" stroke="#fff" stroke-width="3" paint-order="stroke" letter-spacing="-1">' +
+    '<text x="7" y="45" fill="#5fae4a">M</text><text x="30" y="45" fill="#ffb93b">B</text>' +
+    '<text x="9" y="76" fill="#ff8f6b">T</text><text x="30" y="76" fill="#45c29a">I</text></g>' +
+    artImg("cheongSangchu", 44, 26, 56),
+
+  // 성장 과정: 작은 상추 → 조금 큰 상추 → 제일 큰 상추
+  record: () =>
+    artBg("#e3f5ec") +
+    '<rect x="0" y="86" width="100" height="14" fill="#c9a77a"/><path d="M0 86 H100" stroke="#a8845a" stroke-width="2"/>' +
+    '<path d="M18 30 Q32 18 46 26 M52 22 Q66 10 80 18" stroke="#8fd19e" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-dasharray="1 5"/>' +
+    '<path d="M44 22 L47 27 L41 27Z M78 14 L81 19 L75 19Z" fill="#8fd19e"/>' +
+    artImg("cheongSangchu", 2, 66, 22) +
+    artImg("cheongSangchu", 22, 54, 34) +
+    artImg("cheongSangchu", 50, 38, 50),
+
+  // 식집사 자격증: 신분증 카드
+  cert: () =>
+    artBg("#fff3c6") +
+    '<defs><clipPath id="certPhoto"><rect x="14" y="40" width="28" height="36" rx="5"/></clipPath></defs>' +
+    '<rect x="7" y="20" width="86" height="64" rx="9" fill="#fff" stroke="#f0cf6a" stroke-width="2.5"/>' +
+    '<path d="M7 29 A9 9 0 0 1 16 20 H84 A9 9 0 0 1 93 29 V33 H7Z" fill="#7cc68a"/>' +
+    '<text x="50" y="30.5" text-anchor="middle" font-family="Pretendard, sans-serif" font-weight="900" font-size="8.5" fill="#fff">식집사 자격증</text>' +
+    '<rect x="14" y="40" width="28" height="36" rx="5" fill="#e8f6e2"/>' +
+    '<g clip-path="url(#certPhoto)">' + artImg("cheongSangchu", 4, 38, 48) + "</g>" +
+    '<g font-family="Pretendard, sans-serif" font-weight="800" fill="#3f4a3c">' +
+    '<text x="47" y="46" font-size="6.5" fill="#9aa894">이름</text><text x="47" y="54" font-size="8">청상추</text>' +
+    '<text x="47" y="63" font-size="6.5" fill="#9aa894">등급</text><text x="47" y="71" font-size="8" fill="#f0a020">★★★</text></g>' +
+    '<g stroke="#3f4a3c" stroke-width="1"><path d="M70 66 V77 M72 66 V77 M75 66 V77 M76.5 66 V77 M79 66 V77 M82 66 V77 M83.5 66 V77 M86 66 V77"/></g>',
+
+  // 식물의 방: 집이 되는 화분 뒤에서 상추가 빼꼼
+  room: () =>
+    artBg("#fff1c9") +
+    '<rect x="0" y="72" width="100" height="28" fill="#c8efc4"/>' +
+    '<rect x="10" y="12" width="22" height="20" rx="6" fill="#cfe3ff" stroke="#fff" stroke-width="3"/><path d="M21 12 V32 M10 22 H32" stroke="#fff" stroke-width="2"/>' +
+    artImg("cheongSangchu", 40, 20, 46, ' transform="rotate(14 63 43)"') +
+    '<rect x="16" y="52" width="58" height="10" rx="5" fill="#ffcfaa"/>' +
+    '<path d="M20 60 H70 L64 94 H26Z" fill="#ffbf94"/>' +
+    '<path d="M38 94 V82 A7 7 0 0 1 52 82 V94Z" fill="#f0a070"/>' +
+    '<circle cx="30" cy="72" r="5" fill="#fff6c2" stroke="#f0a070" stroke-width="2"/><circle cx="60" cy="72" r="5" fill="#fff6c2" stroke="#f0a070" stroke-width="2"/>' +
+    '<path d="M28 52 C24 40 32 34 38 40 M44 52 C44 40 52 36 56 42" stroke="#6cbf6a" stroke-width="3" fill="none" stroke-linecap="round"/>',
+
+  // 과자 소통방: 말풍선 위에 과자 친구들이 나란히 앉아있어요
+  lounge: () =>
+    artBg("#e7f6d3") +
+    '<path d="M18 46 H82 A12 12 0 0 1 94 58 V76 A12 12 0 0 1 82 88 H36 L22 97 L25 88 H18 A12 12 0 0 1 6 76 V58 A12 12 0 0 1 18 46Z" fill="#fff" stroke="#8fd19e" stroke-width="3"/>' +
+    '<g fill="#8fd19e"><circle cx="36" cy="68" r="4.5"/><circle cx="50" cy="68" r="4.5"/><circle cx="64" cy="68" r="4.5"/></g>' +
+    artImg("yangparing", 4, 20, 30) +
+    artImg("pokachip", 26, 18, 30) +
+    artImg("ggotgerang", 48, 18, 30) +
+    artImg("bananakick", 70, 20, 28),
+
+  // 새싹톡: 두 팔 활짝 "이리와" (손 흔드는 쪽을 거울처럼 붙여 양팔을 벌린 모습)
+  chat: () =>
+    artBg("#e0f5ec") +
+    '<defs><clipPath id="hugHalf"><rect x="50" y="0" width="50" height="100"/></clipPath></defs>' +
+    '<g clip-path="url(#hugHalf)">' + artImg("jeokSangchu", 7.1, 12, 84) + "</g>" +
+    '<g transform="matrix(-1 0 0 1 100 0)"><g clip-path="url(#hugHalf)">' + artImg("jeokSangchu", 7.1, 12, 84) + "</g></g>" +
+    '<g fill="#ff9c8a"><path d="M14 18 C14 14 19 13 20 17 C21 13 26 14 26 18 C26 22 20 25 20 26 C20 25 14 22 14 18Z"/>' +
+    '<path d="M78 12 C78 9.5 81.5 9 82 11.5 C82.5 9 86 9.5 86 12 C86 14.5 82 16.5 82 17 C82 16.5 78 14.5 78 12Z"/></g>',
+
+  // 오늘의 미션: 초록 과녁 + 가운데 상추 친구 + 새싹 다트
+  mission: () =>
+    artBg("#f2f9ea") +
+    '<g fill="none" stroke-linecap="round">' +
+    '<circle cx="48" cy="54" r="38" stroke="#6cbf6a" stroke-width="7" stroke-dasharray="3 2.2"/>' +
+    '<circle cx="48" cy="54" r="38" stroke="#8fd19e" stroke-width="3"/>' +
+    '<circle cx="48" cy="54" r="25" stroke="#5fae4a" stroke-width="7" stroke-dasharray="3 2.2"/>' +
+    '<circle cx="48" cy="54" r="25" stroke="#a6dca6" stroke-width="3"/></g>' +
+    artImg("cheongSangchu", 31, 36, 34) +
+    '<path d="M60 40 L84 14" stroke="#f0a020" stroke-width="3.5" stroke-linecap="round"/>' +
+    '<path d="M84 14 C80 6 86 2 92 4 C92 10 88 14 84 14Z" fill="#6cbf6a"/><path d="M84 14 C90 12 96 16 96 22 C90 22 86 18 84 14Z" fill="#8fd19e"/>' +
+    '<path d="M60 40 L57 38 L58 43Z" fill="#3f4a3c"/>',
+
+  // 다이어트 레시피: 왼쪽은 옆으로 넓은 상추, 오른쪽은 홀쭉한 상추
+  recipe: () =>
+    artBg("#fdebd8") +
+    '<ellipse cx="50" cy="90" rx="44" ry="5" fill="#f3d3b3"/>' +
+    '<g transform="translate(30 0) scale(1.4 1) translate(-30 0)">' + artImg("cheongSangchu", 12, 46, 40) + "</g>" +
+    '<g transform="translate(76 0) scale(0.62 1) translate(-76 0)">' + artImg("cheongSangchu", 52, 34, 52) + "</g>",
+
+
+  // 장바구니: 마트 바구니 안에 상추 친구들이 앉고 눕고, 손잡이에 얼굴을 걸쳐요
+  cart: () =>
+    artBg("#ffe9d9") +
+    '<path d="M20 50 C20 16 80 16 80 50" stroke="#4f9e5f" stroke-width="6" fill="none" stroke-linecap="round"/>' +
+    artImg("mint", 34, 4, 30) +
+    artImg("cheongSangchu", 14, 30, 34) +
+    artImg("jeokSangchu", 58, 26, 30) +
+    '<path d="M10 52 H90 L82 94 H18Z" fill="#7cc68a"/>' +
+    '<path d="M10 52 H90" stroke="#5fae4a" stroke-width="5" stroke-linecap="round"/>' +
+    '<g fill="#5fae4a"><rect x="22" y="62" width="10" height="7" rx="3"/><rect x="38" y="62" width="10" height="7" rx="3"/><rect x="54" y="62" width="10" height="7" rx="3"/><rect x="70" y="62" width="9" height="7" rx="3"/>' +
+    '<rect x="24" y="75" width="10" height="7" rx="3"/><rect x="40" y="75" width="10" height="7" rx="3"/><rect x="56" y="75" width="10" height="7" rx="3"/><rect x="70" y="75" width="7" height="7" rx="3"/></g>' +
+    '<rect x="40" y="86" width="20" height="4" rx="2" fill="#fff" opacity=".6"/>' +
+    artImg("basil", 54, 30, 32, ' transform="rotate(-78 70 46)"'),
+};
+
+function charIcon(name) {
+  const draw = MENU_ART[name] || MENU_ART.mission;
+  return '<span class="menu-art"><svg viewBox="0 0 100 100" aria-hidden="true">' + draw() + "</svg></span>";
+}
+
+// data-icon="이름" → 동글 아이콘, data-char-icon="이름" → 캐릭터 메뉴 그림
 function fillIcons(root) {
   (root || document).querySelectorAll("[data-icon]").forEach((el) => {
     el.innerHTML = icon(el.getAttribute("data-icon"));
