@@ -382,6 +382,33 @@ const GROWTH_PLANS = {
   },
 };
 
+// ---------------------------------------------------------------------
+// 내 식물 기록 - 주차별 잎 색 기준표 (1~2 / 3~4 / 5~6 / 7~8 / 9~10 / 11~12주)
+// colors: 사진에서 "식물"로 인정하는 색 (lime 연두 · green 초록 · red 적갈/자주 · yellow 연노랑)
+// minRatio: 사진에서 그 색이 차지해야 하는 최소 비율 (어릴수록 잎이 작아서 기준을 낮춰요)
+// ---------------------------------------------------------------------
+const GROWTH_LOOKS = {
+  romaine: ["연두색 떡잎", "밝은 연두 본잎", "초록, 잎이 길쭉해짐", "겉잎 진초록, 속잎 연두", "진초록 + 속은 연노랑빛 (수확)", ""],
+  cheonggyeongchae: ["연두색 떡잎", "연두 잎, 줄기 연한 초록", "초록 잎, 줄기 연둣빛 흰색", "진초록 잎 + 통통한 연두 줄기 (수확)", "", ""],
+  basil: ["연두색 둥근 떡잎", "밝은 초록 본잎", "선명한 초록, 윤기", "진하고 윤기 나는 초록", "진초록 (수확)", ""],
+  mint: ["아주 작은 연두 떡잎", "연두~초록, 아직 작음", "초록, 잎 주름 생김", "선명한 초록", "진초록, 줄기 살짝 보랏빛 가능", "진초록 (수확)"],
+  cheongSangchu: ["연두색 떡잎", "밝은 연두 본잎", "연두~초록, 잎 가장자리 주름", "밝은 초록 (수확)", "", ""],
+  jeokSangchu: ["연두 떡잎 (줄기 살짝 붉음)", "잎 끝부터 붉은빛 시작", "가장자리 적갈색, 안쪽 초록", "진한 적갈색~자주색, 밑동 초록 (수확)", "", ""],
+};
+const GROWTH_STAGE_LABELS = ["1~2주", "3~4주", "5~6주", "7~8주", "9~10주", "11~12주"];
+const GROWTH_MIN_RATIO = [0.06, 0.1, 0.15, 0.18, 0.18, 0.18];
+
+// 이번 주차의 기준 (주차가 표를 넘으면 마지막 칸을 써요)
+function getGrowthLook(plantId, week) {
+  const looks = GROWTH_LOOKS[plantId] || GROWTH_LOOKS.basil;
+  let stage = Math.min(Math.floor((week - 1) / 2), 5);
+  while (stage > 0 && !looks[stage]) stage--;
+  const colors = ["lime", "green"];
+  if (plantId === "jeokSangchu" || (plantId === "mint" && stage >= 4)) colors.push("red");
+  if (plantId === "romaine" && stage >= 4) colors.push("yellow");
+  return { stage, label: GROWTH_STAGE_LABELS[stage], text: looks[stage], colors, minRatio: GROWTH_MIN_RATIO[stage] };
+}
+
 const MOODS = [
   { id: "happy", label: "행복", emoji: "😊", color: "#ffb74d" },
   { id: "calm", label: "평온", emoji: "🙂", color: "#4caf50" },

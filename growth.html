@@ -49,6 +49,7 @@
       <div class="card rec-now">
         <div class="rec-badge" id="recPlan"></div>
         <h2 class="rec-week-title" id="weekTitle"></h2>
+        <div class="week-look" id="weekLook"></div>
         <label class="photo-drop" id="photoDrop">
           <input type="file" id="photoInput" accept="image/*" />
           <img id="photoPreview" alt="이번 주 화분 사진" />
@@ -62,6 +63,11 @@
         <div class="streak" id="streakText"></div>
         <div class="week-grid" id="weekGrid"></div>
         <div class="notice">매주 한 번씩, 한 주도 빠짐없이 사진을 올리면 <b>300P</b>를 드려요! 기록이 끝나면 사진들을 모아 성장 영상을 만들어드려요 🎬</div>
+        <details class="harvest-table look-table">
+          <summary>📋 주차별 잎 색 기준표 보기</summary>
+          <p class="hint">사진 속 잎 색이 기준과 맞아야 기록으로 인정돼요. 초록 잎이 크게 나오게 찍어주세요!</p>
+          <div class="look-scroll"><table id="lookTable"></table></div>
+        </details>
       </div>
     </section>
 

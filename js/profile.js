@@ -40,6 +40,8 @@ const QUESTIONS = [
 ];
 
 let currentQuestion = 0;
+let answers = []; // 지금까지 고른 답 (뒤로 가기용)
+let mbtiFrom = "step-intro"; // 첫 질문에서 뒤로 가면 돌아갈 화면
 let resultPlantId = null;
 let selectedMoodId = "happy";
 let selectedGender = "";
@@ -157,6 +159,8 @@ function showIntro(profile) {
 
 function startMbti() {
   currentQuestion = 0;
+  answers = [];
+  mbtiFrom = document.getElementById("step-summary").style.display === "block" ? "step-summary" : "step-intro";
   Object.keys(PLANTS).forEach((id) => (scores[id] = 0));
   showStep("step-mbti");
   renderQuestion();
@@ -167,6 +171,7 @@ function renderQuestion() {
   document.getElementById("questionText").textContent = q.text;
   document.getElementById("qCount").textContent = currentQuestion + 1 + " / " + QUESTIONS.length;
   document.getElementById("qProgressFill").style.width = ((currentQuestion + 1) / QUESTIONS.length) * 100 + "%";
+  document.getElementById("qBackBtn").textContent = currentQuestion === 0 ? "← 처음으로" : "← 이전 질문";
 
   // 지금 1등 후보들이 살짝 튀어나와요
   const top = Math.max.apply(null, Object.values(scores));
@@ -179,9 +184,23 @@ function renderQuestion() {
 function answer(isYes) {
   const q = QUESTIONS[currentQuestion];
   (isYes ? q.yes : q.no).forEach((plantId) => (scores[plantId] += 1));
+  answers.push(isYes);
   currentQuestion += 1;
   if (currentQuestion < QUESTIONS.length) renderQuestion();
   else showResult();
+}
+
+// 뒤로 가기: 마지막 답을 취소하고 그 질문으로 돌아가요
+function goBack() {
+  if (!answers.length) {
+    showStep(mbtiFrom);
+    return;
+  }
+  currentQuestion -= 1;
+  const q = QUESTIONS[currentQuestion];
+  (answers.pop() ? q.yes : q.no).forEach((plantId) => (scores[plantId] -= 1));
+  showStep("step-mbti");
+  renderQuestion();
 }
 
 function updateResultLine() {
@@ -220,6 +239,8 @@ function showResult() {
 document.getElementById("plantNameInput").addEventListener("input", updateResultLine);
 document.getElementById("yesBtn").addEventListener("click", () => answer(true));
 document.getElementById("noBtn").addEventListener("click", () => answer(false));
+document.getElementById("qBackBtn").addEventListener("click", goBack);
+document.getElementById("resultBackBtn").addEventListener("click", goBack);
 document.getElementById("startMbtiBtn").addEventListener("click", startMbti);
 document.getElementById("retestBtn").addEventListener("click", startMbti);
 document.getElementById("logoutBtn").addEventListener("click", confirmLogout);

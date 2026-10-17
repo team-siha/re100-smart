@@ -2088,3 +2088,31 @@ main.has-tabbar { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
 .recipe-card .rc-top b { font-size: 15px; color: var(--green-deep); line-height: 1.35; }
 .recipe-card ol { margin: 4px 0 8px; padding-left: 18px; font-size: 13.5px; line-height: 1.7; }
 .recipe-card a { font-size: 13px; font-weight: 800; color: var(--green-dark); text-decoration: none; }
+/* 식물 MBTI 뒤로 가기 */
+.q-back {
+  display: block;
+  margin: 12px auto 0;
+  border: none;
+  background: none;
+  color: #8a9586;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+/* 내 식물 기록 - 이번 주 기준 + 기준표 */
+.week-look {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #5c6b58;
+  background: var(--mint);
+  border-radius: 12px;
+  padding: 8px 12px;
+  margin: -4px 0 12px;
+}
+.week-look b { color: var(--green-deep); }
+.look-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.look-table table { min-width: 560px; font-size: 12px; }
+.look-table tr td.now { background: var(--yellow); font-weight: 800; }

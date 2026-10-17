@@ -101,6 +101,9 @@ function renderWeeks(record) {
   document.getElementById("recPlan").textContent =
     PLANTS[record.plantId].name + " · " + record.purposeLabel + " · 총 " + record.weeks + "주";
   document.getElementById("weekTitle").textContent = cur + "주차의 내 " + name + "의 모습";
+  const look = getGrowthLook(record.plantId, cur);
+  document.getElementById("weekLook").innerHTML =
+    "📋 <b>이번 주 기준 (" + look.label + ")</b> " + PLANTS[record.plantId].name + ": " + look.text;
 
   const preview = document.getElementById("photoPreview");
   const empty = document.getElementById("photoEmpty");
@@ -113,6 +116,19 @@ function renderWeeks(record) {
   document.getElementById("weekHint").textContent = photo
     ? "✅ " + cur + "주차 기록 완료! 사진을 누르면 다시 올릴 수 있어요."
     : "📸 이번 주 사진을 올려주세요 (" + daysLeft + "일 남았어요)";
+
+  // 기준표 (내 작물 줄은 강조)
+  document.getElementById("lookTable").innerHTML =
+    "<thead><tr><th>작물</th>" + GROWTH_STAGE_LABELS.map((l) => "<th>" + l + "</th>").join("") + "</tr></thead><tbody>" +
+    Object.keys(GROWTH_LOOKS)
+      .map(
+        (id) =>
+          "<tr" + (id === record.plantId ? ' class="me"' : "") + "><td>" + PLANTS[id].name + "</td>" +
+          GROWTH_LOOKS[id].map((t, i) => "<td" + (id === record.plantId && i === look.stage ? ' class="now"' : "") + ">" + (t || "-") + "</td>").join("") +
+          "</tr>"
+      )
+      .join("") +
+    "</tbody>";
 
   const grid = document.getElementById("weekGrid");
   grid.innerHTML = "";
@@ -135,6 +151,39 @@ function renderWeeks(record) {
 }
 
 // 사진은 작게 줄여서 저장해요 (휴대폰 저장 공간 아끼기)
+// 사진 속 잎 색 비율 재기 (작게 줄여서 픽셀마다 색상을 분류)
+// lime 연두 · green 초록 · red 적갈/자주 · yellow 연노랑
+function measureColors(img) {
+  const size = 80;
+  const c = document.createElement("canvas");
+  c.width = size;
+  c.height = size;
+  const ctx = c.getContext("2d");
+  ctx.drawImage(img, 0, 0, size, size);
+  const data = ctx.getImageData(0, 0, size, size).data;
+  const count = { lime: 0, green: 0, red: 0, yellow: 0 };
+  for (let i = 0; i < data.length; i += 4) {
+    const r = data[i] / 255;
+    const g = data[i + 1] / 255;
+    const b = data[i + 2] / 255;
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    const v = max;
+    const s = max === 0 ? 0 : (max - min) / max;
+    if (s < 0.2 || v < 0.15) continue; // 흰색·회색·검정은 빼요
+    let h;
+    if (max === r) h = (60 * ((g - b) / (max - min)) + 360) % 360;
+    else if (max === g) h = 60 * ((b - r) / (max - min)) + 120;
+    else h = 60 * ((r - g) / (max - min)) + 240;
+    if (h >= 62 && h < 95) count.lime++;
+    else if (h >= 95 && h < 175) count.green++;
+    else if ((h >= 290 || h < 14) && s > 0.3 && v < 0.85) count.red++; // 적갈·자주 (주황빛 갈색은 제외)
+    else if (h >= 45 && h < 62 && v > 0.55) count.yellow++;
+  }
+  const total = size * size;
+  return { lime: count.lime / total, green: count.green / total, red: count.red / total, yellow: count.yellow / total };
+}
+
 function shrinkImage(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -147,7 +196,7 @@ function shrinkImage(file) {
         c.width = Math.round(img.width * scale);
         c.height = Math.round(img.height * scale);
         c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
-        resolve(c.toDataURL("image/jpeg", 0.75));
+        resolve({ dataUrl: c.toDataURL("image/jpeg", 0.75), colors: measureColors(img) });
       };
       img.onerror = reject;
       img.src = reader.result;
@@ -164,14 +213,32 @@ document.getElementById("photoInput").addEventListener("change", async (e) => {
   const record = loadRecord();
   const cur = currentWeek(record);
   if (cur > record.weeks) return;
+  let shot;
   try {
-    record.photos[cur] = await shrinkImage(file);
-    saveRecord(record);
+    shot = await shrinkImage(file);
   } catch (err) {
     showAlert("다른 사진으로 다시 시도해주세요!", { type: "warn", title: "사진을 불러오지 못했어요" });
     return;
   }
+  // 기준표: 이번 주에 나와야 할 잎 색이 충분히 있어야 인정돼요
+  const look = getGrowthLook(record.plantId, cur);
+  const plantRatio = look.colors.reduce((sum, k) => sum + shot.colors[k], 0);
+  // 적상추처럼 붉은 잎도, 밑동·안쪽 초록은 꼭 보여야 해요 (갈색 과자 사진 통과 방지)
+  const greenRatio = shot.colors.lime + shot.colors.green;
+  if (plantRatio < look.minRatio || greenRatio < look.minRatio * 0.4) {
+    showAlert(
+      "이건 식물 사진이 아니에요, 다시 보내주세요 🌱\n\n이번 주(" + look.label + ") " + PLANTS[record.plantId].name + "는\n'" + look.text + "' 모습이에요.\n잎이 화면에 크게 나오도록 화분을 가까이 찍어주세요.",
+      { type: "warn", title: "식물 사진이 아니에요" }
+    );
+    return;
+  }
+  record.photos[cur] = shot.dataUrl;
+  saveRecord(record);
   render();
+  showAlert(
+    cur + "주차 " + record.plantNickname + " 사진이 기록됐어요! 📸\n잎 색 " + Math.round(plantRatio * 100) + "% 확인 완료",
+    { title: "기록 완료" }
+  );
 });
 
 // ---------------- 3. 완성: 성장 영상 + 다음 작물 ----------------
