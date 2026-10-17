@@ -1,7 +1,7 @@
 // RE100:SMART 서비스 워커 - 모든 화면·그림·글씨체를 휴대폰 저장본에서 바로 꺼내요 (누르자마자 열리게)
 // 새 버전은 CACHE 이름이 바뀔 때 통째로 새로 받아요.
 // ⚠️ 배포 전에 항상 tools/update-sw.ps1 을 실행하세요 (목록과 버전을 자동으로 바꿔줘요)
-const CACHE = "re100-20261017-151655";
+const CACHE = "re100-20261017-163225";
 
 const PRECACHE = [
   "./",
@@ -36,6 +36,12 @@ const PRECACHE = [
   "images/icons/icon-180.png",
   "images/icons/icon-192.png",
   "images/icons/icon-512.png",
+  "images/recipes/basil.jpg",
+  "images/recipes/cheonggyeongchae.jpg",
+  "images/recipes/cheongSangchu.jpg",
+  "images/recipes/jeokSangchu.jpg",
+  "images/recipes/mint.jpg",
+  "images/recipes/romaine.jpg",
   "index.html",
   "js/cart.js",
   "js/certificate.js",
