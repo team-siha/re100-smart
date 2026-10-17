@@ -2,7 +2,7 @@
 // - 화면(html) · 코드(js/css): 항상 서버에서 최신 버전을 먼저 확인해요 (인터넷이 없거나 느리면 저장본)
 // - 그림 · 글씨체: 휴대폰에 저장된 걸 바로 써요 (그래서 화면 이동이 빨라요)
 // 파일을 추가/삭제하면 PRECACHE 목록을 다시 만들고 CACHE 숫자를 올려주세요 (v3 → v4)
-const CACHE = "re100-v3";
+const CACHE = "re100-v4";
 const NETWORK_TIMEOUT = 2500;
 
 const PRECACHE = [
