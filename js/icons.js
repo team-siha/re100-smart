@@ -149,10 +149,49 @@ function icon(name, extraClass) {
   );
 }
 
-// data-icon="이름" 이 붙은 요소에 아이콘을 채워 넣습니다.
+// ---------------------------------------------------------------------
+// 캐릭터 메뉴 아이콘: 우리 채소·과자 캐릭터 얼굴 + 메뉴에 맞는 소품
+// ---------------------------------------------------------------------
+const PROPS = {
+  camera: '<rect x="3" y="7" width="18" height="13" rx="4" fill="#5fbfa2"/><rect x="8" y="4" width="8" height="4" rx="2" fill="#5fbfa2"/><circle cx="12" cy="13.5" r="4" fill="#fff"/><circle cx="12" cy="13.5" r="2.2" fill="#8edcc3"/>',
+  medal: '<path d="M7 2 L10 10 L12 8.5 L14 10 L17 2" fill="#8fd19e"/><circle cx="12" cy="15" r="7" fill="#ffc94d"/><path d="M12 11 L13.2 13.6 L16 13.9 L13.9 15.7 L14.5 18.4 L12 17 L9.5 18.4 L10.1 15.7 L8 13.9 L10.8 13.6 Z" fill="#fff"/>',
+  moon: '<path d="M15 3 A9 9 0 1 0 21 15 A7 7 0 1 1 15 3Z" fill="#ffd96b"/><circle cx="7" cy="6" r="1.2" fill="#ffd96b"/>',
+  bubble: '<path d="M4 5 H20 A2 2 0 0 1 22 7 V15 A2 2 0 0 1 20 17 H11 L6 21 V17 H4 A2 2 0 0 1 2 15 V7 A2 2 0 0 1 4 5Z" fill="#ffbf94"/><circle cx="8" cy="11" r="1.5" fill="#fff"/><circle cx="12" cy="11" r="1.5" fill="#fff"/><circle cx="16" cy="11" r="1.5" fill="#fff"/>',
+  sprout: '<path d="M4 5 H20 A2 2 0 0 1 22 7 V15 A2 2 0 0 1 20 17 H11 L6 21 V17 H4 A2 2 0 0 1 2 15 V7 A2 2 0 0 1 4 5Z" fill="#8edcc3"/><path d="M12 15 V10" stroke="#fff" stroke-width="2" stroke-linecap="round"/><path d="M12 11 C9 11 8 9 8.3 7.5 C10.5 7.5 12 9 12 11Z" fill="#fff"/><path d="M12 10.5 C15 10.5 16 8.5 15.7 7 C13.5 7 12 8.5 12 10.5Z" fill="#fff"/>',
+  star: '<path d="M12 2 L14.8 8 L21.5 8.8 L16.5 13.4 L17.9 20 L12 16.7 L6.1 20 L7.5 13.4 L2.5 8.8 L9.2 8 Z" fill="#ffc94d"/><path d="M8.8 12.4 L11 14.6 L15.4 10.2" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+  spoon: '<ellipse cx="8" cy="7" rx="3.5" ry="5" fill="#ffbf94"/><rect x="7" y="11" width="2" height="11" rx="1" fill="#ffbf94"/><path d="M15 2 V9 M17 2 V9 M19 2 V9 M15 9 Q17 12 19 9" stroke="#8fd19e" stroke-width="1.6" fill="none" stroke-linecap="round"/><rect x="16" y="10" width="2" height="12" rx="1" fill="#8fd19e"/>',
+  heart: '<path d="M12 21 C5 16 2 12 2 8.5 A4.5 4.5 0 0 1 12 6 A4.5 4.5 0 0 1 22 8.5 C22 12 19 16 12 21Z" fill="#ff9c8a"/><path d="M7 8 C7.5 6.8 8.5 6.3 9.5 6.4" stroke="#fff" stroke-width="1.5" fill="none" stroke-linecap="round"/>',
+  cart: '<path d="M2 4 H5 L7.5 15 H18 L20.5 7 H6.5" stroke="#ff9a5c" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 8 H19.5 L17.5 14 H8.3Z" fill="#ffbf94"/><circle cx="9" cy="19" r="2" fill="#ff9a5c"/><circle cx="17" cy="19" r="2" fill="#ff9a5c"/>',
+};
+
+const CHAR_ICONS = {
+  profile: { img: "jeokSangchu", bg: "#ffe3dc", prop: "heart" },
+  record: { img: "mint", bg: "#d9f3ea", prop: "camera" },
+  cert: { img: "basil", bg: "#fff1bf", prop: "medal" },
+  room: { img: "sleep/cheongSangchu", bg: "#e6ecff", prop: "moon" },
+  lounge: { img: "yangparing", bg: "#e7f6d3", prop: "bubble" },
+  chat: { img: "romaine", bg: "#e0f5ec", prop: "sprout" },
+  mission: { img: "cheongSangchu", bg: "#fff4c9", prop: "star" },
+  recipe: { img: "cheonggyeongchae", bg: "#fdebd8", prop: "spoon" },
+  cart: { img: "pokachip", bg: "#ffe9d9", prop: "cart" },
+};
+
+function charIcon(name) {
+  const c = CHAR_ICONS[name] || CHAR_ICONS.mission;
+  return (
+    '<span class="char-ic" style="--ci-bg:' + c.bg + '">' +
+    '<span class="ci-face"><img src="images/chars/' + c.img + '.webp" alt="" /></span>' +
+    '<span class="ci-prop"><svg viewBox="0 0 24 24" aria-hidden="true">' + PROPS[c.prop] + "</svg></span></span>"
+  );
+}
+
+// data-icon="이름" → 동글 아이콘, data-char-icon="이름" → 캐릭터 아이콘
 function fillIcons(root) {
   (root || document).querySelectorAll("[data-icon]").forEach((el) => {
     el.innerHTML = icon(el.getAttribute("data-icon"));
+  });
+  (root || document).querySelectorAll("[data-char-icon]").forEach((el) => {
+    el.innerHTML = charIcon(el.getAttribute("data-char-icon"));
   });
 }
 

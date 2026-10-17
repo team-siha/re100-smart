@@ -92,8 +92,12 @@ const RECIPE_EXTRA = {
 
 const RECIPE_ORDER = ["cheongSangchu", "jeokSangchu", "romaine", "cheonggyeongchae", "basil", "mint"];
 
+// 메뉴 사진: images/recipes/{작물}.webp 가 있으면 사진을, 없으면 그림을 보여줘요
 function recipeArt(id) {
-  return '<svg viewBox="0 0 200 164" aria-hidden="true">' + RECIPE_EXTRA[id].art + "</svg>";
+  return (
+    '<svg viewBox="0 0 200 164" aria-hidden="true">' + RECIPE_EXTRA[id].art + "</svg>" +
+    '<img class="recipe-photo" src="images/recipes/' + id + '.webp" alt="' + PLANTS[id].recipeTitle + '" onerror="this.remove()" />'
+  );
 }
 
 function openRecipe(id) {

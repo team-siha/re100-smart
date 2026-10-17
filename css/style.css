@@ -2237,3 +2237,36 @@ body.keyboard-open .chat-input-row.above-tabbar { bottom: 0; }
 .rs-ingredients span { font-size: 13px; background: var(--yellow-soft); border: 1.5px solid #f6e7a8; padding: 5px 10px; border-radius: 999px; }
 .rs-steps { margin: 0 0 16px; padding-left: 20px; font-size: 14.5px; line-height: 1.8; }
 .rs-steps li::marker { color: var(--green); font-weight: 800; }
+/* 레시피 메뉴 사진 (있으면 그림 위에 덮어요) */
+.rt-art, .rs-art { position: relative; }
+.recipe-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.recipe-note { font-size: 11.5px; color: var(--muted); margin: 14px 4px 0; line-height: 1.5; }
+.rs-note { font-size: 11.5px; color: #a08a6a; background: #fff8ec; border-radius: 10px; padding: 7px 10px; margin: -4px 0 4px; line-height: 1.5; }
+
+/* 홈 큰 문구 윗줄 "버린 봉지에서" - 연두 → 녹색 */
+.hero-headline .line1 { background: linear-gradient(90deg, #8cc63f, #5fae4a); -webkit-background-clip: text; background-clip: text; }
+/* 캐릭터 메뉴 아이콘 - 채소·과자 친구 얼굴 + 소품 */
+.char-ic { position: relative; display: block; width: 100%; height: 100%; }
+.ci-face {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--ci-bg, var(--green-soft));
+  overflow: hidden;
+  box-shadow: 0 5px 10px rgba(110, 170, 110, 0.22), inset 0 0 0 3px #fff;
+}
+.ci-face img { position: absolute; width: 150%; left: -25%; top: -28%; }
+.ci-prop {
+  position: absolute;
+  right: -4px;
+  bottom: -2px;
+  width: 38%;
+  height: 38%;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ci-prop svg { width: 72%; height: 72%; }
