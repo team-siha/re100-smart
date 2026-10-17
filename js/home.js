@@ -43,9 +43,12 @@ renderTabbar("home");
 
   function render() {
     const n = HOME_NOTICES[idx];
+    // 팝업존 광고를 누르면 바로 그 화면으로 가요
     track.innerHTML =
+      '<a class="c-link" href="' + n.href + '">' +
       '<div class="c-title">' + n.title + "</div>" +
-      '<div class="c-desc">' + n.desc + "</div>";
+      '<div class="c-desc">' + n.desc + "</div>" +
+      '<span class="c-cta">' + n.cta + " →</span></a>";
     pageCur.textContent = String(idx + 1).padStart(2, "0");
     pageTotal.textContent = String(HOME_NOTICES.length).padStart(2, "0");
   }

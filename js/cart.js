@@ -17,7 +17,7 @@ function renderCart() {
     const li = document.createElement("li");
     li.className = "cart-item";
     li.innerHTML =
-      '<span class="ci-thumb">' + (item.img ? '<img src="' + item.img + '" alt="" />' : icon(item.icon || "nutrient")) + "</span>" +
+      '<span class="ci-thumb">' + (item.img ? '<img src="' + item.img.replace(".png", ".webp") + '" alt="" />' : icon(item.icon || "nutrient")) + "</span>" +
       '<span class="ci-text"><b>' + escapeHtml(item.name) + "</b><small>" + formatChatTime(item.at) + " 담음</small></span>" +
       '<span class="ci-cost">' + item.cost + "P</span>";
     const del = document.createElement("button");

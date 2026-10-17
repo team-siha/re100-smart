@@ -104,7 +104,7 @@ function buildDialog(message, opts, buttons) {
   wrap.setAttribute("aria-modal", "true");
   wrap.innerHTML =
     '<div class="ad-card">' +
-    '<div class="ad-char"><img src="images/chars/' + (type === "warn" ? "sleep/cheongSangchu" : "cheongSangchu") + '.png" alt="" /></div>' +
+    '<div class="ad-char"><img src="images/chars/' + (type === "warn" ? "sleep/cheongSangchu" : "cheongSangchu") + '.webp" alt="" /></div>' +
     '<div class="ad-title"></div><div class="ad-msg"></div><div class="ad-btns"></div></div>';
   wrap.querySelector(".ad-title").textContent = opts.title || (type === "warn" ? "잠깐만요!" : "알려드려요");
   wrap.querySelector(".ad-msg").textContent = message;
@@ -180,7 +180,7 @@ function renderSplash(onDone) {
   el.className = "splash";
   el.innerHTML =
     '<div class="splash-logo">' +
-    '<span class="splash-mark"><img src="images/chars/cheongSangchu.png" alt="" /></span>' +
+    '<span class="splash-mark"><img src="images/chars/cheongSangchu.webp" alt="" /></span>' +
     '<span class="splash-text"><span class="splash-tag">' + splitLetters("나를 살리는 식물", 0) + "</span>" +
     '<span class="splash-word"><span class="sw-re">' + splitLetters("RE100:", 0) + "</span>" +
     '<span class="sw-smart">' + splitLetters("SMART", 6) + "</span></span></span>" +
@@ -639,7 +639,7 @@ function saveRecord(record) {
 const LOUNGE_KEY = "snackfarm_lounge_rooms";
 const LOUNGE_MSG_PREFIX = "snackfarm_lounge2_msg_";
 
-// 과자 캐릭터 (images/chars/*.png)
+// 과자 캐릭터 (images/chars/*.webp)
 const SNACK_CHARS = {
   ggotgerang: { name: "꽃게랑", color: "#ffd9c7" },
   pokachip: { name: "포카칩", color: "#d6e8ff" },
@@ -778,12 +778,48 @@ function formatChatTime(ts) {
 // ---------------------------------------------------------------------
 // 홈 화면 하단 공지 캐러셀 데이터
 // ---------------------------------------------------------------------
+// href: 누르면 바로 가는 화면
 const HOME_NOTICES = [
-  { title: "🌱 포대 농업 시작하기", desc: "과자봉지를 리싸이클해서 나만의 미니 스마트팜을 만들어보세요." },
-  { title: "📸 내 식물 기록 챌린지", desc: "매주 화분 사진을 한 번도 빠짐없이 올리면 300P를 드려요!" },
-  { title: "🎓 식집사 자격증 응시", desc: "8문제로 내 식물을 얼마나 아는지 테스트하고 포인트를 받아보세요." },
-  { title: "🍘 과자 소통방 오픈", desc: "자갈치 · 감자깡 · 콘초 · 바나나킥 방이 새로 열렸어요." },
+  { title: "🌱 포대 농업 시작하기", desc: "과자봉지를 리싸이클해서 나만의 미니 스마트팜을 만들어보세요.", href: "myroom.html", cta: "식물의 방 가기" },
+  { title: "📸 내 식물 기록 챌린지", desc: "매주 화분 사진을 한 번도 빠짐없이 올리면 300P를 드려요!", href: "growth.html", cta: "기록하러 가기" },
+  { title: "🎓 식집사 자격증 응시", desc: "8문제로 내 식물을 얼마나 아는지 테스트하고 포인트를 받아보세요.", href: "certificate.html", cta: "시험 보러 가기" },
+  { title: "🍘 과자 소통방 오픈", desc: "자갈치 · 감자깡 · 콘초 · 바나나킥 방이 새로 열렸어요.", href: "lounge.html", cta: "소통방 가기" },
 ];
 
 // 첫 화면(index)이 아닌 곳으로 바로 들어와도 앱을 켤 때 한 번은 로딩 화면을 보여줘요
 if (!splashSeen() && !document.querySelector(".onboard-wrap")) renderSplash();
+// ---------------------------------------------------------------------
+// 빠른 화면 이동
+// 1) 서비스 워커: 한 번 받은 파일을 휴대폰에 저장 (https 배포 주소에서만)
+// 2) 미리 불러오기: 아래 탭·메뉴 링크를 미리 받아두고, 누르는 순간 바로 열어요
+// ---------------------------------------------------------------------
+if ("serviceWorker" in navigator && location.protocol === "https:") {
+  window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+}
+
+(function speedUpNavigation() {
+  // 크롬(안드로이드): 화면에 있는 링크를 미리 받고, 손가락을 대면 미리 그려둬요
+  if (HTMLScriptElement.supports && HTMLScriptElement.supports("speculationrules")) {
+    const rules = document.createElement("script");
+    rules.type = "speculationrules";
+    rules.textContent = JSON.stringify({
+      prefetch: [{ where: { href_matches: "/*" }, eagerness: "eager" }],
+      prerender: [{ where: { href_matches: "/*" }, eagerness: "moderate" }],
+    });
+    document.head.appendChild(rules);
+    return;
+  }
+  // 그 밖의 브라우저: 링크에 손가락이 닿는 순간 미리 받아요
+  const done = new Set();
+  function warm(e) {
+    const a = e.target.closest && e.target.closest("a[href]");
+    if (!a || a.origin !== location.origin || done.has(a.href)) return;
+    done.add(a.href);
+    const link = document.createElement("link");
+    link.rel = "prefetch";
+    link.href = a.href;
+    document.head.appendChild(link);
+  }
+  document.addEventListener("touchstart", warm, { passive: true });
+  document.addEventListener("mouseover", warm, { passive: true });
+})();

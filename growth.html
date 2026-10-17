@@ -9,6 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 <meta name="apple-mobile-web-app-title" content="RE100:SMART" />
 <meta name="format-detection" content="telephone=no" />
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
 <link rel="manifest" href="manifest.json" />
 <link rel="icon" href="images/icons/icon-192.png" />
 <link rel="apple-touch-icon" href="images/icons/icon-180.png" />
@@ -89,9 +90,21 @@
         <div class="next-confirm" id="nextConfirm"></div>
       </div>
     </section>
-
-    <button class="demo-btn" id="demoBtn" type="button">⏩ 시연용: 일주일 뒤로 넘기기</button>
   </main>
+</div>
+<!-- 사진 크게 보기 · 수정 -->
+<div class="photo-modal" id="photoModal" role="dialog" aria-modal="true">
+  <div class="pv-box">
+    <div class="pv-title" id="pvTitle"></div>
+    <img id="pvImg" alt="기록한 화분 사진" />
+    <div class="pv-note" id="pvNote"></div>
+    <div class="pv-btns">
+      <button class="btn" id="pvReplace" type="button">📷 사진 바꾸기</button>
+      <button class="btn secondary" id="pvRotate" type="button">↻ 돌리기</button>
+    </div>
+    <button class="pv-delete" id="pvDelete" type="button">사진 삭제</button>
+    <button class="btn ghost" id="pvClose" type="button">닫기</button>
+  </div>
 </div>
 <script src="js/common.js"></script>
 <script src="js/characters.js"></script>

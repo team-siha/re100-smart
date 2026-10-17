@@ -152,7 +152,7 @@ function showIntro(profile) {
   document.getElementById("introTitle").textContent =
     (profile.name || profile.nickname) + "님, 이제 나에게 맞는 식물을 찾아볼까요?";
   document.getElementById("introVeggies").innerHTML = VEGGIE_IDS.map(
-    (id) => '<img src="images/chars/' + id + '.png" alt="" />'
+    (id) => '<img src="images/chars/' + id + '.webp" alt="" />'
   ).join("");
   showStep("step-intro");
 }
@@ -177,7 +177,7 @@ function renderQuestion() {
   const top = Math.max.apply(null, Object.values(scores));
   document.getElementById("qVeggies").innerHTML = VEGGIE_IDS.map(
     (id) =>
-      '<img src="images/chars/' + id + '.png" alt="" class="' + (top > 0 && scores[id] === top ? "lead" : "") + '" />'
+      '<img src="images/chars/' + id + '.webp" alt="" class="' + (top > 0 && scores[id] === top ? "lead" : "") + '" />'
   ).join("");
 }
 

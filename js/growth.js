@@ -13,9 +13,9 @@ function show(id) {
   );
 }
 
-// 시연용 날짜 이동까지 반영한 "지금"
+// 지금 시각 (기록 주차 계산용)
 function nowFor(record) {
-  return Date.now() + (record.demoOffsetDays || 0) * DAY;
+  return Date.now();
 }
 
 // 지금 몇 주차인지 (기록 기간이 끝났으면 weeks + 1)
@@ -88,7 +88,6 @@ document.getElementById("startRecordBtn").addEventListener("click", () => {
     startedAt: Date.now(),
     photos: {},
     rewarded: false,
-    demoOffsetDays: 0,
     history: (old && old.history) || [],
   });
   render();
@@ -111,10 +110,10 @@ function renderWeeks(record) {
   preview.src = photo || "";
   preview.style.display = photo ? "block" : "none";
   empty.style.display = photo ? "none" : "flex";
-  const endsAt = record.startedAt + cur * 7 * DAY - (record.demoOffsetDays || 0) * DAY;
+  const endsAt = record.startedAt + cur * 7 * DAY;
   const daysLeft = Math.max(1, Math.ceil((endsAt - Date.now()) / DAY));
   document.getElementById("weekHint").textContent = photo
-    ? "✅ " + cur + "주차 기록 완료! 사진을 누르면 다시 올릴 수 있어요."
+    ? "✅ " + cur + "주차 기록 완료! 사진을 누르면 바꾸기 · 돌리기 · 삭제를 할 수 있어요."
     : "📸 이번 주 사진을 올려주세요 (" + daysLeft + "일 남았어요)";
 
   // 기준표 (내 작물 줄은 강조)
@@ -138,6 +137,7 @@ function renderWeeks(record) {
     if (st === "missed") missed++;
     const cell = document.createElement("div");
     cell.className = "week-cell " + st;
+    cell.dataset.week = w;
     cell.innerHTML =
       (st === "done" ? '<img src="' + record.photos[w] + '" alt="" />' : '<span class="wc-ic">' + (st === "missed" ? "💧" : st === "open" ? "📸" : "🔒") + "</span>") +
       '<span class="wc-label">' + w + "주차</span>";
@@ -150,7 +150,6 @@ function renderWeeks(record) {
   show("step-weeks");
 }
 
-// 사진은 작게 줄여서 저장해요 (휴대폰 저장 공간 아끼기)
 // 사진 속 잎 색 비율 재기 (작게 줄여서 픽셀마다 색상을 분류)
 // lime 연두 · green 초록 · red 적갈/자주 · yellow 연노랑
 function measureColors(img) {
@@ -184,6 +183,7 @@ function measureColors(img) {
   return { lime: count.lime / total, green: count.green / total, red: count.red / total, yellow: count.yellow / total };
 }
 
+// 사진은 작게 줄여서 저장해요 (휴대폰 저장 공간 아끼기)
 function shrinkImage(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -206,13 +206,112 @@ function shrinkImage(file) {
   });
 }
 
+// ---------------- 사진 수정 (크게 보기 · 바꾸기 · 돌리기 · 삭제) ----------------
+let editingWeek = null; // 사진 바꾸기 중인 주차 (없으면 이번 주)
+let viewingWeek = null;
+
+function openViewer(week) {
+  const record = loadRecord();
+  if (!record.photos[week]) return;
+  viewingWeek = week;
+  const isNow = week === currentWeek(record);
+  document.getElementById("pvTitle").textContent = week + "주차의 내 " + record.plantNickname + "의 모습";
+  document.getElementById("pvImg").src = record.photos[week];
+  // 지난 주 사진은 지우면 "빠짐없이" 기록이 끊겨서, 삭제는 이번 주만 돼요
+  document.getElementById("pvDelete").style.display = isNow ? "block" : "none";
+  document.getElementById("pvNote").textContent = isNow
+    ? "이번 주 사진은 바꾸거나 지울 수 있어요."
+    : "지난 주 사진은 바꾸거나 돌릴 수만 있어요 (기록이 끊기지 않게 삭제는 안 돼요).";
+  document.getElementById("photoModal").classList.add("open");
+}
+
+function closeViewer() {
+  document.getElementById("photoModal").classList.remove("open");
+  viewingWeek = null;
+}
+
+// 사진을 오른쪽으로 90도 돌려요
+function rotatePhoto(dataUrl) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement("canvas");
+      c.width = img.height;
+      c.height = img.width;
+      const ctx = c.getContext("2d");
+      ctx.translate(c.width / 2, c.height / 2);
+      ctx.rotate(Math.PI / 2);
+      ctx.drawImage(img, -img.width / 2, -img.height / 2);
+      resolve(c.toDataURL("image/jpeg", 0.8));
+    };
+    img.src = dataUrl;
+  });
+}
+
+document.getElementById("photoDrop").addEventListener("click", (e) => {
+  const record = loadRecord();
+  const cur = currentWeek(record);
+  // 이번 주 사진이 이미 있으면 사진 고르기 대신 크게 보기 창을 열어요
+  if (record.photos[cur]) {
+    e.preventDefault();
+    openViewer(cur);
+  } else {
+    editingWeek = null;
+  }
+});
+
+document.getElementById("weekGrid").addEventListener("click", (e) => {
+  const cell = e.target.closest(".week-cell.done");
+  if (cell) openViewer(Number(cell.dataset.week));
+});
+
+document.getElementById("pvReplace").addEventListener("click", () => {
+  editingWeek = viewingWeek;
+  document.getElementById("photoInput").click();
+});
+
+document.getElementById("pvRotate").addEventListener("click", async () => {
+  const record = loadRecord();
+  const week = viewingWeek;
+  record.photos[week] = await rotatePhoto(record.photos[week]);
+  saveRecord(record);
+  document.getElementById("pvImg").src = record.photos[week];
+  renderWeeks(record);
+});
+
+document.getElementById("pvDelete").addEventListener("click", () => {
+  const week = viewingWeek;
+  showConfirm("이번 주 사진을 지우면 다시 올려야 기록으로 인정돼요.", {
+    type: "warn",
+    title: week + "주차 사진을 지울까요?",
+    okText: "지우기",
+    cancelText: "그대로 둘래요",
+    onOk: () => {
+      const record = loadRecord();
+      delete record.photos[week];
+      saveRecord(record);
+      closeViewer();
+      render();
+    },
+  });
+});
+
+document.getElementById("pvClose").addEventListener("click", closeViewer);
+document.getElementById("photoModal").addEventListener("click", (e) => {
+  if (e.target.id === "photoModal") closeViewer();
+});
+
 document.getElementById("photoInput").addEventListener("change", async (e) => {
   const file = e.target.files[0];
   e.target.value = "";
-  if (!file) return;
   const record = loadRecord();
-  const cur = currentWeek(record);
+  const now = currentWeek(record);
+  // 바꾸기: 이미 올린 주차만 / 새로 올리기: 이번 주만
+  const cur = editingWeek && record.photos[editingWeek] ? editingWeek : now;
+  editingWeek = null;
+  if (!file) return;
   if (cur > record.weeks) return;
+  const replacing = !!record.photos[cur];
   let shot;
   try {
     shot = await shrinkImage(file);
@@ -234,10 +333,11 @@ document.getElementById("photoInput").addEventListener("change", async (e) => {
   }
   record.photos[cur] = shot.dataUrl;
   saveRecord(record);
+  closeViewer();
   render();
   showAlert(
-    cur + "주차 " + record.plantNickname + " 사진이 기록됐어요! 📸\n잎 색 " + Math.round(plantRatio * 100) + "% 확인 완료",
-    { title: "기록 완료" }
+    cur + "주차 " + record.plantNickname + " 사진이 " + (replacing ? "바뀌었어요" : "기록됐어요") + "! 📸\n잎 색 " + Math.round(plantRatio * 100) + "% 확인 완료",
+    { title: replacing ? "사진 수정 완료" : "기록 완료" }
   );
 });
 
@@ -264,7 +364,7 @@ async function playGrowthVideo(record, onFrame) {
   const ctx = canvas.getContext("2d");
   const weeks = Object.keys(record.photos).map(Number).sort((a, b) => a - b);
   const imgs = await loadImages(weeks.map((w) => record.photos[w]));
-  const charImg = (await loadImages(["images/chars/" + record.plantId + ".png"]))[0];
+  const charImg = (await loadImages(["images/chars/" + record.plantId + ".webp"]))[0];
   const W = canvas.width;
   const H = canvas.height;
   const per = 1300;
@@ -365,7 +465,7 @@ function renderDone(record) {
 // 다음 작물 고르기 → 장바구니에 담고, 새 기록 시작 준비
 function chooseNext(id) {
   const plant = PLANTS[id];
-  addToCart({ id: "seed_" + id, name: plant.name + " 모종 키트", cost: 1500, img: "images/chars/" + id + ".png" });
+  addToCart({ id: "seed_" + id, name: plant.name + " 모종 키트", cost: 1500, img: "images/chars/" + id + ".webp" });
   const box = document.getElementById("nextConfirm");
   box.innerHTML =
     '<div class="nc-bubble">' + plant.name + " 알겠습니다! 🛒 장바구니에 넣어뒀어요.<br /><small>(구매는 아직 준비중!)</small></div>" +
@@ -427,21 +527,11 @@ document.getElementById("saveVideoBtn").addEventListener("click", async () => {
   recorder.stop();
 });
 
-// 시연용: 일주일 뒤로
-document.getElementById("demoBtn").addEventListener("click", () => {
-  const record = loadRecord();
-  if (!record || !record.startedAt) return;
-  record.demoOffsetDays = (record.demoOffsetDays || 0) + 7;
-  saveRecord(record);
-  render();
-});
-
 function render() {
   playing = null;
   const record = loadRecord();
   const profile = loadProfile();
   const active = record && record.startedAt && record.plantId === profile.plantId;
-  document.getElementById("demoBtn").style.display = active && !isFinished(record) ? "block" : "none";
   if (!active) renderSetup();
   else if (isFinished(record)) renderDone(record);
   else renderWeeks(record);
