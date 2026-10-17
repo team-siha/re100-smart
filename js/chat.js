@@ -76,6 +76,17 @@ function pick(list) {
   return list[idx];
 }
 
+// 추천한 친구가 있는 과자 방 (친구의 과자봉지 = 그 방) 바로 가기 버튼
+function friendRoomLink(friend) {
+  const room = DEFAULT_LOUNGE_ROOMS.find((r) => SNACK_CHARS[r.charId].name === friend.snackName);
+  if (!room) return "";
+  return (
+    '<a class="friend-room" href="lounge-room.html?id=' + room.id + '">' +
+    getSnackImg(room.charId) + "<span><b>" + room.name + " 바로 가기</b><small>" + friend.name + "이(가) 있는 방이에요</small></span>" +
+    '<span class="fr-arrow">→</span></a>'
+  );
+}
+
 function renderMessages() {
   chatWindow.innerHTML = "";
   messages.forEach((m) => {
@@ -88,7 +99,7 @@ function renderMessages() {
         '<div class="name">' + escapeHtml(f.name) + "</div>" +
         '<div class="meta">' + escapeHtml(formatProfileLine(f)) + "</div>" +
         "</div></div>" +
-        '<div class="tag">#' + escapeHtml(m.tag) + " 같이 나눠요</div>";
+        '<div class="tag">#' + escapeHtml(m.tag) + " 같이 나눠요</div>" + friendRoomLink(f);
       chatWindow.appendChild(card);
       return;
     }
@@ -335,6 +346,7 @@ function encourage(call) {
       role: "ai",
       text:
         "너랑 비슷한 고민을 가진 또래 친구 " + VIRTUAL_FRIENDS[worry.friend].name + "을(를) 소개해줄게.\n" +
+        VIRTUAL_FRIENDS[worry.friend].snackName + " 방에 자주 있으니까 위 버튼으로 놀러 가봐!\n" +
         "서로 공통점을 나누다 보면 어느새 친해져 있을 거야 🌿",
     });
   }, 1000);
