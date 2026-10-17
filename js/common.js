@@ -795,6 +795,14 @@ if (!splashSeen() && !document.querySelector(".onboard-wrap")) renderSplash();
 // ---------------------------------------------------------------------
 if ("serviceWorker" in navigator && location.protocol === "https:") {
   window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+  // 새 버전이 깔리면 예전 화면이 남지 않게 한 번만 새로고침
+  const hadController = !!navigator.serviceWorker.controller;
+  let reloaded = false;
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (!hadController || reloaded) return;
+    reloaded = true;
+    window.location.reload();
+  });
 }
 
 (function speedUpNavigation() {

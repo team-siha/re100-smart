@@ -107,7 +107,7 @@ enterBtn.addEventListener("click", () => {
   const snackInput = document.getElementById("snackInput");
   const snack = snackInput.value.trim();
   if (!age || !selectedGender || !snack) {
-    showAlert("나이, 성별, 과자봉지 이름을 모두 입력해야\n식물 MBTI를 시작할 수 있어요!", { title: "아직 빈 칸이 있어요" });
+    showAlert("나이, 성별, 사용할 과자봉지을 모두 입력해야\n식물 MBTI를 시작할 수 있어요!", { title: "아직 빈 칸이 있어요" });
     return;
   }
   if (!checkKindWords(snack)) {

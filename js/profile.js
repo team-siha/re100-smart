@@ -131,7 +131,7 @@ document.getElementById("saveEditBtn").addEventListener("click", () => {
   const snack = document.getElementById("inputSnack").value.trim();
   const plantName = document.getElementById("inputPlantName").value.trim();
   if (!age || !selectedGender || !snack || !plantName) {
-    showAlert("나이, 성별, 과자봉지 이름, 식물 이름을\n모두 입력해주세요!", { title: "아직 빈 칸이 있어요" });
+    showAlert("나이, 성별, 사용할 과자봉지, 식물 이름을\n모두 입력해주세요!", { title: "아직 빈 칸이 있어요" });
     return;
   }
   if (!checkKindWords(snack, plantName)) return;
