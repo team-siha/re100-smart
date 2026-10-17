@@ -86,20 +86,156 @@ function handleSend() {
   }
   pushMessage({ me: true, text: text });
   chatInput.value = "";
+  replyTo(text);
+}
 
-  const ids = Object.keys(VIRTUAL_FRIENDS);
-  const user = ids[Math.floor(Math.random() * ids.length)];
+// ---------------------------------------------------------------------
+// 또래 친구들의 대답: 내 말을 듣고 맞춰서 반응해요
+// ---------------------------------------------------------------------
+const FRIEND_IDS = Object.keys(VIRTUAL_FRIENDS);
+const myName = getCurrentNickname() || "친구";
+const CHEERS = [
+  "오오 축하축하~~ 🎉",
+  "와 대박 축하해요!! 👏👏",
+  "축하축하 🌱 사진도 보여주세요!",
+  "우와 부럽다… 진짜 축하해요 ㅎㅎ",
+  "축하합니다~~ 🥳 저도 힘내서 키워야지",
+];
+const ASK_RE = /축하해\s*주세요|축하해줘|같이 축하/;
+const CONGRATS_RE = /축하|추카|ㅊㅋ|축하축하|대박|짱|멋지|부럽/;
+
+function pick(list) {
+  return list[Math.floor(Math.random() * list.length)];
+}
+
+// 바로 전에 말한 친구들은 빼고 골라요
+function pickFriend(exclude) {
+  const recent = messages.slice(-3).filter((m) => !m.me).map((m) => m.user);
+  const pool = FRIEND_IDS.filter((id) => !(exclude || []).includes(id) && !recent.includes(id));
+  return pick(pool.length ? pool : FRIEND_IDS.filter((id) => !(exclude || []).includes(id)));
+}
+
+// 친구가 '입력 중…'인 것처럼 조금 기다렸다가 말해요
+let replyChain = Promise.resolve();
+function say(user, text, delay) {
+  replyChain = replyChain.then(
+    () =>
+      new Promise((resolve) => {
+        setTimeout(() => {
+          pushMessage({ me: false, user: user, text: text });
+          resolve();
+        }, delay);
+      })
+  );
+}
+
+// 아직 다 축하받지 못한 '축하해주세요' 글 (최근 메시지 중)
+function openCelebration() {
+  for (let i = messages.length - 1; i >= Math.max(0, messages.length - 8); i--) {
+    const m = messages[i];
+    if (m.celebrated) return null;
+    if (!m.me && ASK_RE.test(m.text)) return { user: m.user, index: i };
+  }
+  return null;
+}
+
+// 친구가 축하해달라고 하면 다른 친구들이 먼저 "오오 축하축하~~" 하며 분위기를 띄워요
+function askCelebration(user, text) {
+  say(user, text, 900);
+  const first = pickFriend([user]);
+  say(first, pick(CHEERS), 1300);
+  say(pickFriend([user, first]), pick(CHEERS.filter((c) => c !== CHEERS[0])), 1100);
+}
+
+function replyTo(text) {
+  const t = text.replace(/\s+/g, " ");
+  const party = openCelebration();
+
+  // 1) 내가 축하해주면 → 축하받은 친구가 고마워해요
+  if (party && CONGRATS_RE.test(t)) {
+    const f = VIRTUAL_FRIENDS[party.user];
+    say(
+      party.user,
+      pick([
+        myName + "님 고마워요!! 🥹 " + f.plantNickname + "도 기뻐할 거예요",
+        "헉 " + myName + "님까지 축하해주시다니 ㅠㅠ 감동이에요 💚",
+        "고마워요 " + myName + "님!! 다음엔 " + myName + "님 식물 소식도 들려주세요 ㅎㅎ",
+      ]),
+      900
+    );
+    if (Math.random() < 0.5) say(pickFriend([party.user]), pick(["역시 이 방 분위기 최고 👍", "다 같이 축하하니까 좋다 ㅎㅎ", "저도 언젠간 축하받고 싶다 🌱"]), 1400);
+    // 축하가 끝났으니 표시를 지워요 (같은 친구가 계속 고마워하지 않게)
+    messages[party.index].celebrated = true;
+    saveLoungeMessages(roomId, messages);
+    return;
+  }
+
+  const user = pickFriend();
   const f = VIRTUAL_FRIENDS[user];
-  const replies = [
-    "저도 요즘 비슷한 생각 많이 해요 :)",
-    "오늘 우리 " + f.plantNickname + " 새 잎 났어요! 같이 축하해주세요~",
-    "여기 계신 분들이랑 얘기하니까 덜 외롭네요 ㅎㅎ",
-    "저도 " + f.snackName + " 봉지로 화분 만들었는데 반가워요!",
-    "물 주는 거 까먹지 마세요~ 💧",
-  ];
-  setTimeout(() => {
-    pushMessage({ me: false, user: user, text: replies[Math.floor(Math.random() * replies.length)] });
-  }, 700);
+
+  // 2) 내 좋은 소식 → 친구들이 축하해줘요
+  if (/새 잎|싹|수확|자랐|컸|피었|성공|합격|생일|해냈/.test(t) && !/\?|안 |못 /.test(t)) {
+    say(user, pick(["오오 " + myName + "님 축하해요!! 🎉", "와 진짜요? 축하축하~~ 👏"]), 900);
+    say(pickFriend([user]), pick(CHEERS), 1200);
+    return;
+  }
+  // 3) 힘들다고 하면 → 먼저 위로해요
+  if (/힘들|우울|외로|피곤|슬퍼|슬프|지쳐|지친|속상|짜증|불안|스트레스|ㅠ|ㅜ/.test(t)) {
+    say(user, pick([
+      myName + "님 오늘 많이 힘드셨구나… 여기선 편하게 얘기해도 돼요 🫂",
+      "토닥토닥… 무슨 일 있었어요? 들어줄게요",
+      "저도 그런 날 있어요. 그럴 땐 " + f.plantNickname + " 물 주면서 잠깐 쉬어요 🌱",
+    ]), 1000);
+    if (Math.random() < 0.5) say(pickFriend([user]), pick(["힘내요 " + myName + "님!! 💚", "오늘은 푹 자요, 내일은 더 나을 거예요"]), 1300);
+    return;
+  }
+  // 4) 인사
+  if (/안녕|하이|ㅎㅇ|반가|처음|왔어요|들어왔/.test(t)) {
+    say(user, pick(["안녕하세요 " + myName + "님!! 반가워요 👋", "오 " + myName + "님 어서 와요~ 🌱 뭐 키우세요?"]), 800);
+    const other = pickFriend([user]);
+    if (Math.random() < 0.6) say(other, "반가워요! 저는 " + VIRTUAL_FRIENDS[other].plantNickname + " 키워요 ㅎㅎ", 1200);
+    return;
+  }
+  // 5) 고맙다고 하면
+  if (/고마|감사|땡큐|ㄱㅅ/.test(t)) {
+    say(user, pick(["에이 별말씀을요 ㅎㅎ", "언제든지요!! 😊", "저희끼리 돕고 살아야죠 💚"]), 800);
+    return;
+  }
+  // 6) 질문하면 → 아는 만큼 대답해요
+  if (/\?|어떻게|뭐|왜|언제|어디|얼마나|몇/.test(t)) {
+    say(user, pick([
+      "음 저는 해 잘 드는 창가에 두고 흙 마르면 물 줘요!",
+      "좋은 질문! 저도 궁금했는데 새싹톡한테 물어보니까 잘 알려주던데요 ㅎㅎ",
+      "저는 " + f.snackName + " 봉지 바닥에 구멍 뚫어서 키우는데 잘 되더라구요",
+      "그거 저도 궁금해요!! 아시는 분~? 🙋",
+    ]), 1000);
+    return;
+  }
+  // 7) 웃으면 같이 웃어요
+  if (/ㅋㅋ|ㅎㅎ|웃기|재밌/.test(t)) {
+    say(user, pick(["ㅋㅋㅋㅋ 공감", "ㅎㅎㅎ 이 방 너무 웃겨요", "ㅋㅋㅋ " + myName + "님 텐션 좋다"]), 800);
+    return;
+  }
+
+  // 8) 그 밖에는 맞장구 + 가끔 친구가 자기 소식을 꺼내요
+  say(user, pick([
+    "오 " + myName + "님 말 공감돼요 :)",
+    "맞아요 저도 그렇게 생각해요!",
+    "헐 그랬구나… 더 얘기해줘요 ㅎㅎ",
+    "여기서 얘기하니까 덜 외롭네요 ㅎㅎ",
+  ]), 900);
+  const r = Math.random();
+  if (r < 0.35) {
+    const asker = pickFriend([user]);
+    const a = VIRTUAL_FRIENDS[asker];
+    askCelebration(asker, pick([
+      "저 오늘 " + a.plantNickname + " 새 잎 났어요!! 축하해주세요 🌱",
+      "드디어 " + a.plantNickname + " 첫 수확했어요 ㅠㅠ 축하해주세요!",
+      a.snackName + " 봉지 화분 3주차인데 키가 두 배 됐어요! 같이 축하해줘요~",
+    ]));
+  } else if (r < 0.55) {
+    say(pickFriend([user]), "물 주는 거 까먹지 마세요~ 💧", 1500);
+  }
 }
 
 sendBtn.addEventListener("click", handleSend);

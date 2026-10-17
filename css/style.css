@@ -1931,6 +1931,7 @@ button.rc-avatar { border: none; padding: 0; cursor: pointer; background: var(--
   transition: opacity 0.6s ease;
 }
 .splash.hide { opacity: 0; pointer-events: none; }
+.splash.wait, .splash.wait * { animation-play-state: paused !important; }
 .splash-logo { display: flex; align-items: center; gap: 10px; }
 .splash-mark {
   width: 64px;

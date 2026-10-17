@@ -68,7 +68,7 @@ function updateWelcomeBack() {
 function renderRecent() {
   const names = Object.keys(loadUserRegistry());
   if (!names.length) return;
-  recentBox.innerHTML = '<div class="recent-label">이 기기에서 함께한 친구</div>';
+  recentBox.innerHTML = '<div class="recent-label">이 기기에서 로그인한 정보</div>';
   names.slice(-6).reverse().forEach((name) => {
     const chip = document.createElement("button");
     chip.type = "button";
@@ -134,10 +134,13 @@ updateMoodBar();
 renderRecent();
 
 // 로고 화면을 잠깐 보여준 뒤, 로그인돼 있으면 홈으로 / 아니면 프로필 입력 화면으로
-renderSplash(() => {
+// (이미 이번에 로고를 봤으면 다시 보여주지 않아요)
+function afterSplash() {
   const current = loadProfile();
   if (current && current.mbtiDone) {
-    window.location.href = "home.html";
+    window.location.replace("home.html");
     return false;
   }
-});
+}
+if (splashSeen()) afterSplash();
+else renderSplash(afterSplash);

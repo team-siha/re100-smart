@@ -185,6 +185,8 @@ function renderSplash(onDone) {
     '<span class="splash-word"><span class="sw-re">' + splitLetters("RE100:", 0) + "</span>" +
     '<span class="sw-smart">' + splitLetters("SMART", 6) + "</span></span></span>" +
     "</div>";
+  // 글씨체가 다 준비될 때까지 멈춰 있다가 시작해요 (도중에 글씨체가 바뀌며 덜컥거리지 않게)
+  el.classList.add("wait");
   document.body.appendChild(el);
   try {
     sessionStorage.setItem(SPLASH_KEY, "1");
@@ -197,8 +199,20 @@ function renderSplash(onDone) {
     if (onDone && onDone() === false) return;
     el.classList.add("hide");
     setTimeout(() => el.remove(), 600);
+    window.dispatchEvent(new Event("splashdone"));
   }
-  setTimeout(finish, SPLASH_MS - 600);
+  let started = false;
+  function start() {
+    if (started) return;
+    started = true;
+    el.classList.remove("wait");
+    setTimeout(finish, SPLASH_MS - 600);
+  }
+  const fontsReady = document.fonts
+    ? Promise.all([document.fonts.load('900 38px "Pretendard"'), document.fonts.load('800 20px "Pretendard"')])
+    : Promise.resolve();
+  fontsReady.then(start, start);
+  setTimeout(start, 900);
 }
 
 // ---------------------------------------------------------------------
@@ -795,30 +809,25 @@ if (!splashSeen() && !document.querySelector(".onboard-wrap")) renderSplash();
 // ---------------------------------------------------------------------
 if ("serviceWorker" in navigator && location.protocol === "https:") {
   window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
-  // 새 버전이 깔리면 예전 화면이 남지 않게 한 번만 새로고침
-  const hadController = !!navigator.serviceWorker.controller;
-  let reloaded = false;
-  navigator.serviceWorker.addEventListener("controllerchange", () => {
-    if (!hadController || reloaded) return;
-    reloaded = true;
-    window.location.reload();
-  });
+  // (새 버전은 다음 화면부터 자연스럽게 적용돼요. 보고 있는 화면을 강제로 새로고침하지 않아요)
 }
 
 (function speedUpNavigation() {
-  // 크롬(안드로이드): 화면에 있는 링크를 미리 받고, 손가락을 대면 미리 그려둬요
+  // 크롬(안드로이드): 링크는 미리 받아두고(가벼움), 손가락이 닿는 순간 그 화면만 미리 그려요.
+  // 예전처럼 탭 화면 6개를 매번 한꺼번에 그려두면 휴대폰이 바빠져서 오히려 터치가 느려져요.
   if (HTMLScriptElement.supports && HTMLScriptElement.supports("speculationrules")) {
-    const rules = document.createElement("script");
-    rules.type = "speculationrules";
-    rules.textContent = JSON.stringify({
-      prefetch: [{ where: { href_matches: "/*" }, eagerness: "eager" }],
-      prerender: [
-        // 아래 탭 화면들은 미리 다 그려둬서 누르자마자 바로 열려요
-        { where: { selector_matches: ".bottom-tabbar a" }, eagerness: "eager" },
-        { where: { href_matches: "/*" }, eagerness: "moderate" },
-      ],
-    });
-    document.head.appendChild(rules);
+    const addRules = () => {
+      const rules = document.createElement("script");
+      rules.type = "speculationrules";
+      rules.textContent = JSON.stringify({
+        prefetch: [{ where: { selector_matches: ".bottom-tabbar a, .menu-grid a" }, eagerness: "eager" }],
+        prerender: [{ where: { href_matches: "/*" }, eagerness: "conservative" }],
+      });
+      document.head.appendChild(rules);
+    };
+    // 로고 화면이 도는 동안은 아무것도 미리 하지 않아요 (로고가 끊기지 않게)
+    if (document.querySelector(".splash")) window.addEventListener("splashdone", addRules, { once: true });
+    else addRules();
     return;
   }
   // 그 밖의 브라우저: 링크에 손가락이 닿는 순간 미리 받아요

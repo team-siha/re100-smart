@@ -1,7 +1,7 @@
 // RE100:SMART 서비스 워커 - 모든 화면·그림·글씨체를 휴대폰 저장본에서 바로 꺼내요 (누르자마자 열리게)
 // 새 버전은 CACHE 이름이 바뀔 때 통째로 새로 받아요.
 // ⚠️ 배포 전에 항상 tools/update-sw.ps1 을 실행하세요 (목록과 버전을 자동으로 바꿔줘요)
-const CACHE = "re100-20261017-163225";
+const CACHE = "re100-20261017-164326";
 
 const PRECACHE = [
   "./",
@@ -70,6 +70,8 @@ const PRECACHE = [
   "recipe.html",
 ];
 
+const FONT_CACHE = "re100-fonts";
+
 self.addEventListener("install", (event) => {
   // cache: "reload" → 휴대폰에 남은 예전 파일 말고 서버의 최신 파일로 저장
   event.waitUntil(
@@ -84,7 +86,7 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches
       .keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
+      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE && k !== FONT_CACHE).map((k) => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });
@@ -100,7 +102,8 @@ self.addEventListener("fetch", (event) => {
   // 화면 주소의 ?id= 같은 꼬리는 무시하고 같은 화면 저장본을 써요
   const isPage = req.mode === "navigate";
   event.respondWith(
-    caches.open(CACHE).then((cache) =>
+    // 글씨체는 업데이트해도 지우지 않는 따로 된 저장소에 둬요 (매번 다시 받느라 느려지지 않게)
+    caches.open(isFont ? FONT_CACHE : CACHE).then((cache) =>
       cache.match(req, { ignoreSearch: isPage }).then(
         (cached) =>
           cached ||
