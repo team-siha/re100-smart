@@ -812,7 +812,11 @@ if ("serviceWorker" in navigator && location.protocol === "https:") {
     rules.type = "speculationrules";
     rules.textContent = JSON.stringify({
       prefetch: [{ where: { href_matches: "/*" }, eagerness: "eager" }],
-      prerender: [{ where: { href_matches: "/*" }, eagerness: "moderate" }],
+      prerender: [
+        // 아래 탭 화면들은 미리 다 그려둬서 누르자마자 바로 열려요
+        { where: { selector_matches: ".bottom-tabbar a" }, eagerness: "eager" },
+        { where: { href_matches: "/*" }, eagerness: "moderate" },
+      ],
     });
     document.head.appendChild(rules);
     return;

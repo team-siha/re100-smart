@@ -1,9 +1,7 @@
-// RE100:SMART 서비스 워커
-// - 화면(html) · 코드(js/css): 항상 서버에서 최신 버전을 먼저 확인해요 (인터넷이 없거나 느리면 저장본)
-// - 그림 · 글씨체: 휴대폰에 저장된 걸 바로 써요 (그래서 화면 이동이 빨라요)
-// 파일을 추가/삭제하면 PRECACHE 목록을 다시 만들고 CACHE 숫자를 올려주세요 (v3 → v4)
-const CACHE = "re100-v4";
-const NETWORK_TIMEOUT = 2500;
+// RE100:SMART 서비스 워커 - 모든 화면·그림·글씨체를 휴대폰 저장본에서 바로 꺼내요 (누르자마자 열리게)
+// 새 버전은 CACHE 이름이 바뀔 때 통째로 새로 받아요.
+// ⚠️ 배포 전에 항상 tools/update-sw.ps1 을 실행하세요 (목록과 버전을 자동으로 바꿔줘요)
+const CACHE = "re100-20261017-145309";
 
 const PRECACHE = [
   "./",
@@ -85,56 +83,6 @@ self.addEventListener("activate", (event) => {
   );
 });
 
-function isStatic(url) {
-  return /\.(webp|png|woff2|json)$/.test(url.pathname);
-}
-
-// 최신 먼저: 서버에 물어보고(no-cache), 너무 늦거나 안 되면 저장본
-function networkFirst(req, cache) {
-  return new Promise((resolve) => {
-    let settled = false;
-    const fallback = () =>
-      cache.match(req, { ignoreSearch: true }).then((cached) => {
-        if (!settled && cached) {
-          settled = true;
-          resolve(cached);
-        }
-        return cached;
-      });
-    const timer = setTimeout(fallback, NETWORK_TIMEOUT);
-    fetch(req, { cache: "no-cache" })
-      .then((res) => {
-        clearTimeout(timer);
-        if (res && res.ok) cache.put(req, res.clone());
-        if (!settled) {
-          settled = true;
-          resolve(res);
-        }
-      })
-      .catch(() => {
-        clearTimeout(timer);
-        fallback().then((cached) => {
-          if (!settled) {
-            settled = true;
-            resolve(cached || Response.error());
-          }
-        });
-      });
-  });
-}
-
-// 저장본 먼저: 그림 · 글씨체
-function cacheFirst(req, cache) {
-  return cache.match(req).then(
-    (cached) =>
-      cached ||
-      fetch(req).then((res) => {
-        if (res && (res.ok || res.type === "opaque")) cache.put(req, res.clone());
-        return res;
-      })
-  );
-}
-
 self.addEventListener("fetch", (event) => {
   const req = event.request;
   if (req.method !== "GET") return;
@@ -143,7 +91,18 @@ self.addEventListener("fetch", (event) => {
   const isFont = url.hostname === "cdn.jsdelivr.net" && url.pathname.endsWith(".woff2");
   if (!sameOrigin && !isFont) return;
 
+  // 화면 주소의 ?id= 같은 꼬리는 무시하고 같은 화면 저장본을 써요
+  const isPage = req.mode === "navigate";
   event.respondWith(
-    caches.open(CACHE).then((cache) => (isFont || isStatic(url) ? cacheFirst(req, cache) : networkFirst(req, cache)))
+    caches.open(CACHE).then((cache) =>
+      cache.match(req, { ignoreSearch: isPage }).then(
+        (cached) =>
+          cached ||
+          fetch(req).then((res) => {
+            if (res && (res.ok || res.type === "opaque")) cache.put(req, res.clone());
+            return res;
+          })
+      )
+    )
   );
 });

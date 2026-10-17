@@ -29,6 +29,23 @@ function renderTabbar(activeKey) {
   if (main) main.classList.add("has-tabbar");
 
   renderCartButton();
+  watchKeyboard();
+}
+
+// 키보드가 올라오면 아래 메뉴를 숨겨요 (입력하다가 실수로 다른 화면으로 넘어가지 않게)
+function watchKeyboard() {
+  const isTyping = (el) => el && (el.tagName === "TEXTAREA" || (el.tagName === "INPUT" && !["range", "file", "checkbox", "radio"].includes(el.type)));
+  const set = (on) => document.body.classList.toggle("keyboard-open", on);
+  document.addEventListener("focusin", (e) => { if (isTyping(e.target)) set(true); });
+  document.addEventListener("focusout", () => setTimeout(() => set(isTyping(document.activeElement)), 50));
+  // 안드로이드처럼 화면 높이가 줄어드는 경우도 함께 확인
+  if (window.visualViewport) {
+    const full = window.innerHeight;
+    window.visualViewport.addEventListener("resize", () => {
+      if (window.visualViewport.height < full * 0.75) set(true);
+      else if (!isTyping(document.activeElement)) set(false);
+    });
+  }
 }
 
 // 오른쪽 위 장바구니 버튼 (담긴 개수 배지)
