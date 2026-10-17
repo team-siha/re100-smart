@@ -20,12 +20,32 @@
 <div class="app">
   <header class="topbar">
     <h1><span data-icon="recipe" class="head-ic"></span>다이어트 레시피</h1>
-    <p>상추가 메인인 다이어트 레시피</p>
+    <p>내가 키운 채소로 만드는 가벼운 한 끼 · 메뉴를 눌러보세요</p>
   </header>
   <main class="has-tabbar">
-    <a class="back-link" href="home.html">&larr; 홈으로</a>
-    <div id="recipeList"></div>
+    <div class="recipe-grid" id="recipeList"></div>
   </main>
+</div>
+
+<!-- 메뉴를 누르면 아래에서 올라오는 세부 설명 -->
+<div class="recipe-sheet" id="recipeSheet" role="dialog" aria-modal="true">
+  <div class="rs-panel">
+    <div class="rs-grab"></div>
+    <div class="rs-art" id="rsArt"></div>
+    <div class="rs-head">
+      <div class="char-box small" id="rsChar"></div>
+      <div>
+        <div class="rs-plant" id="rsPlant"></div>
+        <div class="rs-title" id="rsTitle"></div>
+      </div>
+    </div>
+    <div class="rs-meta" id="rsMeta"></div>
+    <div class="rs-label">재료</div>
+    <div class="rs-ingredients" id="rsIngredients"></div>
+    <div class="rs-label">만드는 법</div>
+    <ol class="rs-steps" id="rsSteps"></ol>
+    <button class="btn" id="rsClose" type="button">닫기</button>
+  </div>
 </div>
 <script src="js/common.js"></script>
 <script src="js/characters.js"></script>
