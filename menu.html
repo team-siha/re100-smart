@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#f3fbe9" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="RE100:SMART" />
+<meta name="format-detection" content="telephone=no" />
+<link rel="manifest" href="manifest.json" />
+<link rel="icon" href="images/icons/icon-192.png" />
+<link rel="apple-touch-icon" href="images/icons/icon-180.png" />
+<title>RE100:SMART | 메뉴</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <h1><span data-icon="menu" class="head-ic"></span>전체 메뉴</h1>
+    <p>보유 포인트 <b id="pointUtil">0P</b></p>
+  </header>
+  <main class="has-tabbar">
+    <div class="menu-panel">
+      <div class="menu-panel-title">🌱 키우기</div>
+      <div class="menu-grid">
+        <a href="profile.html"><span class="menu-badge" data-icon="profile"></span><span class="label">내 프로필 · MBTI</span></a>
+        <a href="growth.html"><span class="menu-badge" data-icon="record"></span><span class="label">내 식물 기록</span></a>
+        <a href="certificate.html"><span class="menu-badge" data-icon="cert"></span><span class="label">식집사 자격증</span></a>
+      </div>
+    </div>
+
+    <div class="menu-panel">
+      <div class="menu-panel-title">🏡 놀기</div>
+      <div class="menu-grid">
+        <a href="myroom.html"><span class="menu-badge" data-icon="room"></span><span class="label">식물의 방</span></a>
+        <a href="lounge.html"><span class="menu-badge" data-icon="lounge"></span><span class="label">과자 소통방</span></a>
+        <a href="chat.html"><span class="menu-badge" data-icon="chat"></span><span class="label">새싹톡 AI</span></a>
+      </div>
+    </div>
+
+    <div class="menu-panel">
+      <div class="menu-panel-title">🎁 챙기기</div>
+      <div class="menu-grid">
+        <a href="missions.html"><span class="menu-badge" data-icon="mission"></span><span class="label">오늘의 미션</span></a>
+        <a href="recipe.html"><span class="menu-badge" data-icon="recipe"></span><span class="label">다이어트 레시피</span></a>
+        <a href="cart.html"><span class="menu-badge" data-icon="cart"></span><span class="label">장바구니</span></a>
+      </div>
+    </div>
+
+    <button class="logout-btn" id="logoutBtn" type="button">로그아웃</button>
+  </main>
+</div>
+<script src="js/common.js"></script>
+<script src="js/icons.js"></script>
+<script src="js/tabbar.js"></script>
+<script src="js/menu.js"></script>
+</body>
+</html>

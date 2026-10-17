@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#f3fbe9" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="RE100:SMART" />
+<meta name="format-detection" content="telephone=no" />
+<link rel="manifest" href="manifest.json" />
+<link rel="icon" href="images/icons/icon-192.png" />
+<link rel="apple-touch-icon" href="images/icons/icon-180.png" />
+<title>RE100:SMART | 프로필 &amp; MBTI 식집사 테스트</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <h1><span data-icon="profile" class="head-ic"></span>내 프로필 · 식물 MBTI</h1>
+    <p>나에게 꼭 맞는 식물 룸메이트를 찾아드려요</p>
+  </header>
+  <main class="has-tabbar">
+    <!-- 이미 프로필을 완성한 유저: 내 프로필 카드 -->
+    <section id="step-summary" class="card" style="display:none;">
+      <div class="my-profile">
+        <div class="char-box large" id="summaryChar"></div>
+        <div class="mp-type" id="summaryType"></div>
+        <div class="mp-line" id="summaryLine"></div>
+        <ul class="mp-info" id="summaryInfo"></ul>
+      </div>
+      <button class="btn" id="editProfileBtn">프로필 수정하기</button>
+      <button class="btn ghost" id="retestBtn" style="margin-top:8px;">MBTI 식집사 테스트 다시 하기</button>
+      <button class="logout-btn" id="logoutBtn" type="button">로그아웃</button>
+    </section>
+
+    <!-- 프로필 수정 -->
+    <section id="step-edit" class="card" style="display:none;">
+      <h2>프로필 수정</h2>
+      <div class="ob-safe">🔒 내 또래의 친구들을 찾기 위해서 적는 정보예요. 안심하셔도 돼요 🌿</div>
+      <div class="ob-row">
+        <div class="field">
+          <label for="inputAge">나이</label>
+          <input type="number" id="inputAge" placeholder="예) 18" min="1" max="120" />
+        </div>
+        <div class="field">
+          <label>성별</label>
+          <div class="seg" id="genderSeg">
+            <button type="button" data-v="여">여</button>
+            <button type="button" data-v="남">남</button>
+            <button type="button" data-v="비공개">비공개</button>
+          </div>
+        </div>
+      </div>
+      <div class="field">
+        <label>오늘 상태</label>
+        <div class="chip-group" id="moodChips"></div>
+        <div class="mood-bar-wrap">
+          <div class="mood-bar-track"><div class="mood-bar-fill" id="moodBarFill"></div></div>
+          <span class="mood-emoji" id="moodEmoji">🙂</span>
+        </div>
+        <input type="range" id="moodIntensity" min="10" max="100" value="60" style="width:100%; margin-top:8px;" />
+      </div>
+      <div class="field">
+        <label for="inputSnack">과자봉지 이름</label>
+        <input type="text" id="inputSnack" placeholder="예) 포스틱" maxlength="12" />
+      </div>
+      <div class="field">
+        <label for="inputPlantName">내 식물 이름</label>
+        <input type="text" id="inputPlantName" placeholder="예) 씩씩이" maxlength="8" />
+      </div>
+      <button class="btn" id="saveEditBtn">수정한 내용 저장하기</button>
+      <button class="btn ghost" id="cancelEditBtn" style="margin-top:8px;">취소</button>
+    </section>
+
+    <!-- MBTI 시작 안내 -->
+    <section id="step-intro" class="card" style="display:none;">
+      <div class="mbti-intro">
+        <div class="q-veggies big" id="introVeggies"></div>
+        <div class="mi-title" id="introTitle"></div>
+        <p class="hint">14개의 질문에 예 / 아니요로 답하면<br />나와 꼭 맞는 식물 룸메이트를 찾아드려요!</p>
+      </div>
+      <button class="btn" id="startMbtiBtn">식물 MBTI 시작하기</button>
+    </section>
+
+    <!-- MBTI 테스트 -->
+    <section id="step-mbti" class="card" style="display:none;">
+      <h2>🪴 MBTI 식집사 테스트</h2>
+      <div class="q-progress">
+        <div class="q-progress-track"><div class="q-progress-fill" id="qProgressFill"></div></div>
+        <span class="q-count" id="qCount">1 / 14</span>
+      </div>
+      <div class="q-veggies" id="qVeggies"></div>
+      <div class="question-text" id="questionText"></div>
+      <div class="yesno-row">
+        <button class="btn" id="yesBtn">예</button>
+        <button class="btn secondary" id="noBtn">아니요</button>
+      </div>
+    </section>
+
+    <!-- 결과 + 식물 이름 짓기 -->
+    <section id="step-result" class="card" style="display:none;">
+      <h2>🎉 당신에게 맞는 식물은?</h2>
+      <div class="plant-result" id="plantResult"></div>
+      <div class="field name-plant">
+        <label for="plantNameInput" id="plantNameLabel">내 식물의 이름을 지어주세요</label>
+        <input type="text" id="plantNameInput" placeholder="예) 씩씩이" maxlength="8" />
+      </div>
+      <div class="ob-example" id="resultLine"></div>
+      <button class="btn" id="saveProfileBtn">저장하고 시작하기</button>
+    </section>
+  </main>
+</div>
+<script src="js/common.js"></script>
+<script src="js/characters.js"></script>
+<script src="js/icons.js"></script>
+<script src="js/tabbar.js"></script>
+<script src="js/profile.js"></script>
+</body>
+</html>

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#f3fbe9" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="RE100:SMART" />
+<meta name="format-detection" content="telephone=no" />
+<link rel="manifest" href="manifest.json" />
+<link rel="icon" href="images/icons/icon-192.png" />
+<link rel="apple-touch-icon" href="images/icons/icon-180.png" />
+<title>RE100:SMART | 내 식물 기록하기</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <h1><span data-icon="record" class="head-ic"></span>내 식물 기록하기</h1>
+    <p>일주일마다 화분 사진을 올려주세요 · 빠짐없이 올리면 <b>300P</b></p>
+  </header>
+  <main class="has-tabbar">
+    <!-- 1. 처음: 키우는 목적 고르기 -->
+    <section id="step-setup" class="card" style="display:none;">
+      <div class="rec-setup-head">
+        <div class="char-box small" id="setupChar"></div>
+        <div>
+          <div class="rec-title" id="setupTitle"></div>
+          <div class="hint" id="setupRange"></div>
+        </div>
+      </div>
+      <div class="rec-label">어떻게 키울까요?</div>
+      <div class="purpose-grid" id="purposeGrid"></div>
+      <button class="btn" id="startRecordBtn" disabled>목적을 골라주세요</button>
+
+      <details class="harvest-table">
+        <summary>작물별 수확까지 걸리는 기간 보기</summary>
+        <table>
+          <thead><tr><th>작물</th><th>수확까지</th><th>비고</th></tr></thead>
+          <tbody id="harvestRows"></tbody>
+        </table>
+      </details>
+    </section>
+
+    <!-- 2. 주차별 기록 -->
+    <section id="step-weeks" style="display:none;">
+      <div class="card rec-now">
+        <div class="rec-badge" id="recPlan"></div>
+        <h2 class="rec-week-title" id="weekTitle"></h2>
+        <label class="photo-drop" id="photoDrop">
+          <input type="file" id="photoInput" accept="image/*" />
+          <img id="photoPreview" alt="이번 주 화분 사진" />
+          <span class="pd-empty" id="photoEmpty"><span data-icon="record" class="pd-ic"></span>화분 사진 첨부하기</span>
+        </label>
+        <div class="hint" id="weekHint"></div>
+      </div>
+
+      <div class="card">
+        <h2>📅 주차별 기록</h2>
+        <div class="streak" id="streakText"></div>
+        <div class="week-grid" id="weekGrid"></div>
+        <div class="notice">매주 한 번씩, 한 주도 빠짐없이 사진을 올리면 <b>300P</b>를 드려요! 기록이 끝나면 사진들을 모아 성장 영상을 만들어드려요 🎬</div>
+      </div>
+    </section>
+
+    <!-- 3. 다 키웠어요: 성장 영상 + 넥스트 스테이지 -->
+    <section id="step-done" style="display:none;">
+      <div class="card video-card">
+        <canvas id="growthCanvas" width="480" height="480"></canvas>
+        <div class="done-msg" id="doneMsg"></div>
+        <div class="video-btns">
+          <button class="btn" id="playVideoBtn">▶ 성장 영상 다시 보기</button>
+          <button class="btn ghost" id="saveVideoBtn">영상 파일로 저장</button>
+        </div>
+      </div>
+
+      <div class="card" id="nextStage">
+        <h2 id="nextTitle"></h2>
+        <p class="hint">다음 작물은 뭘로 선택할까요?</p>
+        <div class="plant-grid" id="nextGrid"></div>
+        <div class="next-confirm" id="nextConfirm"></div>
+      </div>
+    </section>
+
+    <button class="demo-btn" id="demoBtn" type="button">⏩ 시연용: 일주일 뒤로 넘기기</button>
+  </main>
+</div>
+<script src="js/common.js"></script>
+<script src="js/characters.js"></script>
+<script src="js/icons.js"></script>
+<script src="js/tabbar.js"></script>
+<script src="js/growth.js"></script>
+</body>
+</html>

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#f3fbe9" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="RE100:SMART" />
+<meta name="format-detection" content="telephone=no" />
+<link rel="manifest" href="manifest.json" />
+<link rel="icon" href="images/icons/icon-192.png" />
+<link rel="apple-touch-icon" href="images/icons/icon-180.png" />
+<title>RE100:SMART | 식물이 위로해줄게 AI</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <h1><span data-icon="chat" class="head-ic"></span>새싹톡 AI</h1>
+    <p>외로울 때마다 AI에게 조언을 구해보세요</p>
+  </header>
+  <main class="has-tabbar">
+    <a class="back-link" href="home.html">&larr; 홈으로</a>
+    <div class="card">
+      <div class="chat-window" id="chatWindow"></div>
+    </div>
+  </main>
+</div>
+<div class="chat-input-row" style="bottom:66px;">
+  <textarea id="chatInput" placeholder="오늘 있었던 일을 편하게 얘기해보세요..."></textarea>
+  <button id="sendBtn">전송</button>
+</div>
+<script src="js/common.js"></script>
+<script src="js/characters.js"></script>
+<script src="js/icons.js"></script>
+<script src="js/tabbar.js"></script>
+<script src="js/chat.js"></script>
+</body>
+</html>

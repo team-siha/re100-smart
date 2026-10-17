@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#f3fbe9" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="RE100:SMART" />
+<meta name="format-detection" content="telephone=no" />
+<link rel="manifest" href="manifest.json" />
+<link rel="icon" href="images/icons/icon-192.png" />
+<link rel="apple-touch-icon" href="images/icons/icon-180.png" />
+<title>RE100:SMART | 식물의 방</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div class="app room-app">
+  <!-- 상단 상태바: 이름 ♥ 식물 / 함께한 지 N일 째 -->
+  <div class="room-status">
+    <div class="rs-brand" id="rsTitle">식물의 방</div>
+    <div class="rs-pair">
+      <span id="rsName">나</span><span class="rs-heart">♥</span><span id="rsPlant">식물</span>
+    </div>
+    <div class="rs-point"><span data-icon="coin"></span><b id="headerPoints">0</b>P</div>
+    <div class="rs-days">함께한 지 <b id="rsDays">1</b>일 째</div>
+  </div>
+
+  <!-- 화분 집 + 흙 이불 + 잎 지붕 -->
+  <div class="plant-room" id="plantRoom">
+    <div class="pr-back" id="roomBack"></div>
+    <button class="pr-char" id="roomChar" aria-label="자고 있는 내 식물"></button>
+    <div class="pr-front" id="roomFront"></div>
+    <div class="pr-zzz" id="roomZzz" aria-hidden="true"><span>z</span><span>z</span><span>Z</span></div>
+
+    <!-- 깨우면 화분 옆에 서서 인사해요 -->
+    <button class="pr-awake" id="awakeChar" aria-label="깨어난 내 식물"></button>
+    <div class="pr-say" id="awakeSay"></div>
+
+    <!-- 물 주기 연출 (물뿌리개 + 물방울) -->
+    <div class="pr-can" id="wateringCan" aria-hidden="true">
+      <svg viewBox="0 0 80 60"><path d="M14 22 H50 V50 A6 6 0 0 1 44 56 H20 A6 6 0 0 1 14 50 Z" fill="#8edcc3" /><path d="M50 30 L74 14 L78 20 L52 40 Z" fill="#8edcc3" /><ellipse cx="76" cy="16" rx="4" ry="6" fill="#5fbfa2" transform="rotate(-35 76 16)" /><path d="M20 22 C20 8 44 8 44 22" stroke="#5fbfa2" stroke-width="5" fill="none" /><circle cx="32" cy="38" r="6" fill="#fff" opacity=".7" /></svg>
+    </div>
+    <div class="pr-drops" id="waterDrops" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    <div class="pr-butterfly" id="butterfly" aria-hidden="true">
+      <svg viewBox="0 0 40 30"><ellipse cx="12" cy="11" rx="10" ry="8" fill="#ffbf94" /><ellipse cx="28" cy="11" rx="10" ry="8" fill="#ffd96b" /><ellipse cx="13" cy="22" rx="6" ry="5" fill="#ffd96b" /><ellipse cx="27" cy="22" rx="6" ry="5" fill="#ffbf94" /><rect x="18.5" y="6" width="3" height="20" rx="1.5" fill="#6b5a3a" /></svg>
+    </div>
+    <div class="rh-pop" id="roomPop"></div>
+  </div>
+
+  <!-- 무료 돌봄: 물 주기 · 깨우기 -->
+  <div class="room-actions">
+    <button class="ra-btn water" id="waterBtn">
+      <span class="ra-ic">💧</span>
+      <span class="ra-text"><b>물 주기</b><small id="waterLevelText">촉촉함 0%</small></span>
+      <span class="ra-gauge"><span id="waterGauge"></span></span>
+    </button>
+    <button class="ra-btn wake" id="wakeBtn">
+      <span class="ra-ic" id="wakeIc">☀️</span>
+      <span class="ra-text"><b id="wakeLabel">깨우기</b><small id="wakeSub">쿨쿨 자는 중</small></span>
+    </button>
+  </div>
+
+  <!-- 오늘의 질문 (주체는 내 식물!) -->
+  <div class="room-question" id="questionBox">
+    <div class="rq-label">오늘의 질문</div>
+    <div class="rq-text" id="questionText"></div>
+    <div class="rq-answer" id="answerView"></div>
+    <div class="rq-form">
+      <textarea id="answerInput" rows="2" placeholder="대답을 적어주세요 (오늘 첫 대답 +10P)"></textarea>
+      <button class="btn" id="answerBtn">대답하기</button>
+    </div>
+  </div>
+
+  <main class="has-tabbar" style="padding-top:14px;">
+    <div class="shop-head">
+      <h2>🛒 식물의 방 상점</h2>
+      <p>포인트로 방을 꾸미고, 진짜 영양제·씨앗도 받아요!</p>
+      <div class="shop-earn">포인트 모으기: 식물 기록 완주 <b>300P</b> · 식집사 자격증 <b>최대 100P</b> · 오늘의 질문 <b>10P</b></div>
+    </div>
+    <div class="shop-grid" id="shopGrid"></div>
+  </main>
+</div>
+<script src="js/common.js"></script>
+<script src="js/characters.js"></script>
+<script src="js/icons.js"></script>
+<script src="js/tabbar.js"></script>
+<script src="js/myroom.js"></script>
+</body>
+</html>

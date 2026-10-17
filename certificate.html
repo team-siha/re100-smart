@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#f3fbe9" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="RE100:SMART" />
+<meta name="format-detection" content="telephone=no" />
+<link rel="manifest" href="manifest.json" />
+<link rel="icon" href="images/icons/icon-192.png" />
+<link rel="apple-touch-icon" href="images/icons/icon-180.png" />
+<title>RE100:SMART | 식집사 자격증</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <h1><span data-icon="cert" class="head-ic"></span>식집사 자격증</h1>
+    <p>내 식물에 대해 얼마나 알고 있니?</p>
+  </header>
+  <main class="has-tabbar">
+
+    <section id="step-intro" class="card">
+      <div class="cert-card">
+        <div class="cert-ribbon">MZ 인증</div>
+        <div class="char-box medium" id="certChar"></div>
+        <div class="cert-title">식집사 자격증 시험장</div>
+        <div class="cert-grade">feat. 귀엽고 웃긴 자가진단</div>
+        <div class="cert-desc">내가 키우는 식물을 진짜 아는지<br/>빡세게(?) 검증해드려요 ㅋㅋ</div>
+      </div>
+      <div class="notice" style="margin-top:14px;">
+        총 8문제! 8개 다 맞으면 레전드 그린썸 100P 🏆 · 6~7개 새싹 매니저 80P 🌿 · 3~5개 물주기 연습생 40P 💧 · 1~2개 10P · 0개는 존버 필요 등급 🪴
+      </div>
+      <button class="btn" id="startQuizBtn" style="margin-top:14px;">시험 시작하기</button>
+    </section>
+
+    <section id="step-quiz" class="card" style="display:none;">
+      <div class="q-progress">
+        <div class="q-progress-track"><div class="q-progress-fill" id="quizFill"></div></div>
+        <span class="q-count" id="quizCount">1 / 8</span>
+      </div>
+      <div class="question-text" id="quizQuestionText"></div>
+      <div class="quiz-answers" id="quizAnswers"></div>
+    </section>
+
+    <section id="step-quiz-result" class="card" style="display:none;">
+      <div class="cert-card" id="quizResult"></div>
+      <a class="btn" href="home.html" style="margin-top:14px;">홈으로 돌아가기</a>
+    </section>
+  </main>
+</div>
+<script src="js/common.js"></script>
+<script src="js/characters.js"></script>
+<script src="js/icons.js"></script>
+<script src="js/tabbar.js"></script>
+<script src="js/certificate.js"></script>
+</body>
+</html>

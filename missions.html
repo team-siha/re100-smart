@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#f3fbe9" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="RE100:SMART" />
+<meta name="format-detection" content="telephone=no" />
+<link rel="manifest" href="manifest.json" />
+<link rel="icon" href="images/icons/icon-192.png" />
+<link rel="apple-touch-icon" href="images/icons/icon-180.png" />
+<title>RE100:SMART | 미션</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <h1><span data-icon="mission" class="head-ic"></span>오늘의 미션</h1>
+    <p>보유 포인트 <b id="pointUtil">0P</b></p>
+  </header>
+  <main class="has-tabbar">
+    <div class="section-title">🌱 포인트 받으러 가기</div>
+
+    <a class="mission-card" href="growth.html">
+      <div class="m-badge" data-icon="record"></div>
+      <div class="m-text"><strong>이번 주 내 식물 사진 올리기</strong><span>한 주도 빠짐없이 올리면 성장 영상까지!</span></div>
+      <div class="m-point">+300P</div>
+    </a>
+
+    <a class="mission-card" href="certificate.html">
+      <div class="m-badge" data-icon="cert"></div>
+      <div class="m-text"><strong>식집사 자격증 응시하기</strong><span>8문제 중 맞춘 개수만큼 포인트</span></div>
+      <div class="m-point">최대 +300P</div>
+    </a>
+
+    <a class="mission-card" href="lounge.html">
+      <div class="m-badge" data-icon="lounge"></div>
+      <div class="m-text"><strong>과자 소통방 인사하기</strong><span>외로운 마음을 나눠보세요</span></div>
+      <div class="m-point">마음+1</div>
+    </a>
+
+    <a class="mission-card" href="chat.html">
+      <div class="m-badge" data-icon="chat"></div>
+      <div class="m-text"><strong>새싹이에게 오늘 하루 말하기</strong><span>위로가 필요할 때 언제든</span></div>
+      <div class="m-point">마음+1</div>
+    </a>
+
+    <div class="section-title">🛒 포인트 쓰러 가기</div>
+    <a class="mission-card" href="myroom.html">
+      <div class="m-badge" data-icon="room"></div>
+      <div class="m-text"><strong>식물의 방 꾸미기 · 영양제 받기</strong><span>500P~1500P 아이템, 실물 영양제·씨앗까지!</span></div>
+      <div class="m-point">사용하기</div>
+    </a>
+  </main>
+</div>
+<script src="js/common.js"></script>
+<script src="js/icons.js"></script>
+<script src="js/tabbar.js"></script>
+<script src="js/missions.js"></script>
+</body>
+</html>
