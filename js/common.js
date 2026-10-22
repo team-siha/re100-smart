@@ -734,13 +734,15 @@ function spendPoints(amount) {
 // ③ 식집사 자격증 퀴즈용 식물별 정답 데이터 (프로토타입용 간이 설정값)
 // 문항: 물을 좋아함 / 햇빛을 좋아함 / 좋은 향기가 남 / 유럽종임 / 빨간색임
 // ---------------------------------------------------------------------
+// herb: 꿀풀과 허브 / aster: 국화과(상추류) / cross: 십자화과 / menthol: 멘톨
+// semiHead: 잎이 위로 겹쳐 자라는 반결구형 / anthocyanin: 안토시아닌 풍부
 const PLANT_FACTS = {
-  cheongSangchu: { water: true, sun: true, scent: false, european: false, red: false },
-  jeokSangchu: { water: true, sun: true, scent: false, european: false, red: true },
-  romaine: { water: true, sun: true, scent: false, european: true, red: false },
-  cheonggyeongchae: { water: true, sun: true, scent: false, european: false, red: false },
-  basil: { water: true, sun: true, scent: true, european: true, red: false },
-  mint: { water: true, sun: false, scent: true, european: true, red: false },
+  cheongSangchu: { water: true, sun: true, scent: false, european: false, red: false, herb: false, aster: true, cross: false, menthol: false, semiHead: false, anthocyanin: false },
+  jeokSangchu: { water: true, sun: true, scent: false, european: false, red: true, herb: false, aster: true, cross: false, menthol: false, semiHead: false, anthocyanin: true },
+  romaine: { water: true, sun: true, scent: false, european: true, red: false, herb: false, aster: true, cross: false, menthol: false, semiHead: true, anthocyanin: false },
+  cheonggyeongchae: { water: true, sun: true, scent: false, european: false, red: false, herb: false, aster: false, cross: true, menthol: false, semiHead: false, anthocyanin: false },
+  basil: { water: true, sun: true, scent: true, european: true, red: false, herb: true, aster: false, cross: false, menthol: false, semiHead: false, anthocyanin: false },
+  mint: { water: true, sun: false, scent: true, european: true, red: false, herb: true, aster: false, cross: false, menthol: true, semiHead: false, anthocyanin: false },
 };
 
 const QUIZ_QUESTIONS = [
@@ -749,6 +751,12 @@ const QUIZ_QUESTIONS = [
   { key: "scent", text: "Q. 내 식물에게서 좋은 향기가 나나요?" },
   { key: "european", text: "Q. 내 식물은 유럽종인가요?" },
   { key: "red", text: "Q. 내 식물은 빨간색인가요?" },
+  { key: "herb", text: "Q. 내 식물은 꿀풀과에 속하는 허브인가요?" },
+  { key: "aster", text: "Q. 내 식물은 상추와 같은 국화과 채소인가요?" },
+  { key: "cross", text: "Q. 내 식물은 배추와 같은 십자화과 채소인가요?" },
+  { key: "menthol", text: "Q. 내 식물에는 시원한 느낌을 주는 멘톨이 들어있나요?" },
+  { key: "semiHead", text: "Q. 내 식물은 잎이 위로 차곡차곡 겹쳐 자라는 반결구형인가요?" },
+  { key: "anthocyanin", text: "Q. 내 식물은 보랏빛 색소인 안토시아닌이 풍부한가요?" },
 ];
 
 // 8문제 기준 포인트 (하루 첫 시험만 받아요)
