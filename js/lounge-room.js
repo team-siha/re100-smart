@@ -19,12 +19,22 @@ document.getElementById("roomTitle").textContent = room.name;
 document.getElementById("roomMembers").textContent = (room.builtin ? "AI 친구 " : "") + (room.members || 1);
 document.getElementById("stageName").textContent = SNACK_CHARS[hostId].name + " 방";
 document.title = "RE100:SMART | " + room.name;
-document.getElementById("roomChat").style.setProperty("--room-color", SNACK_CHARS[hostId].color);
+// 과자봉지 색 그대로 화면 전체 배경 (진한 봉지면 이름·시간 글자는 흰색)
+const roomChatEl = document.getElementById("roomChat");
+roomChatEl.style.setProperty("--room-bag", SNACK_CHARS[hostId].bag);
+roomChatEl.classList.toggle("dark-bag", !!SNACK_CHARS[hostId].dark);
+document.body.style.background = SNACK_CHARS[hostId].bag;
 
-// 같은 과자 캐릭터 셋이 시간차로 침대에 떨어져요
-document.getElementById("fallers").innerHTML = [0, 1, 2]
-  .map((i) => '<span class="faller f' + i + '">' + getSnackImg(hostId) + "</span>")
-  .join("");
+// 방 주인 과자 캐릭터는 뒤에서 지켜보고
+document.getElementById("roomHost").innerHTML = getSnackImg(hostId);
+
+// 상추들이 손잡고 뛰어놀아요 (캐릭터 사이사이 맞잡은 손)
+const DANCERS = ["cheongSangchu", "basil", "jeokSangchu", "mint", "romaine"];
+document.getElementById("dance").innerHTML = DANCERS.map(
+  (id, i) =>
+    (i ? '<span class="hand" style="--i:' + i + '"></span>' : "") +
+    '<span class="dancer" style="--i:' + i + '"><img src="images/chars/' + id + '.webp" alt="" /></span>'
+).join("");
 
 const chatWindow = document.getElementById("chatWindow");
 const chatInput = document.getElementById("chatInput");

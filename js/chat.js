@@ -216,28 +216,75 @@ function diaryLetter() {
   const when = daysAgo === 0 ? "오늘" : daysAgo === 1 ? "어제" : "며칠 전에";
   const answer = room.answers[key];
   const q = quoteOf(answer, 26);
-  const kind = DAILY_QUESTIONS[dailyQuestionIndex(dateFromKey(key))].kind;
-  const first = {
-    praise: you + " " + when + " 나한테 \"" + q + "\"라고 칭찬해줘서 너무 고마워 💚 잎이 간질간질했어 히히",
-    morning: you + " 아침에 나한테 \"" + q + "\"라고 해주고 싶다고 했지? 그 말 듣고 싶어서 내일은 해보다 먼저 일어날 거야 🌅",
-    cute: you + " 내 귀여운 점이 \"" + q + "\"라니… 부끄러워서 잎 끝이 살짝 빨개졌어 🥹 고마워!",
-    song: you + " \"" + q + "\" 들려주고 싶다고 했지? 🎶 그 노래 생각하면서 잎을 살랑살랑 흔들어봤어",
-    weather: you + " " + when + " 날씨가 \"" + q + "\"라고 알려줘서 고마워 ☀️ 덕분에 언제 광합성 할지 딱 알았어",
-    share: you + " 내 첫 수확을 \"" + q + "\"(이)랑 나눠 먹고 싶다고 했지? 🥹 그 생각하니까 빨리 크고 싶어졌어!",
-    thanks: you + " " + when + " 나한테 고맙다고 해줘서 내가 더 고마워 💚 \"" + q + "\"… 이 말 오래오래 기억할게",
-  }[kind] || you + " " + when + " 나한테 \"" + q + "\"라고 말해줘서 너무 고마워 💚";
 
-  const second = wateredRecently()
-    ? "덕분에 물도 맛있게 먹고 " + pick(DREAMS)
-    : pick(DREAMS) + "\n근데 나 목이 조금 말라… 내 방에서 물 한 모금 주면 좋겠다 💧";
+  // 1) 네가 남긴 말을 그대로 꺼내요 (틀은 여러 가지 중 랜덤)
+  const open = pick([
+    you + " " + when + " 내 방에서 \"" + q + "\"라고 남겨준 거 봤어!",
+    you + ", \"" + q + "\"… " + when + " 해준 이 말 계속 생각났어",
+    you + " " + when + " 나한테 \"" + q + "\"라고 말해줬지?",
+  ]);
 
   chatState.letters[key] = true;
   saveChatState();
+
+  // 힘든 얘기가 담겨 있으면 먼저 걱정해줘요
   if (moodOf(answer) === "neg") {
     setPending("day");
-    return first + "\n" + second + "\n근데 혹시 요즘 힘든 일 있어? 나한테는 다 말해도 돼 🫂";
+    return "💌 " + open + "\n그 말 읽고 나 조금 걱정됐어… 혹시 요즘 힘든 일 있어? 나한테는 다 말해도 돼 🫂";
   }
-  return "💌 " + first + "\n" + second + "\n" + nextQuestion("grownup");
+
+  // 2) 그 말에 담긴 내용을 보고 느낀 점을 말해요
+  const feel = letterFeeling(answer, DAILY_QUESTIONS[dailyQuestionIndex(dateFromKey(key))].kind);
+
+  // 3) 내 상태는 가끔만 (물 · 꿈)
+  const extra = !wateredRecently()
+    ? "근데 나 목이 조금 말라… 내 방에서 물 한 모금 주면 좋겠다 💧"
+    : Math.random() < 0.5
+      ? "덕분에 물도 맛있게 먹고 " + pick(DREAMS)
+      : "";
+
+  // 4) 네 말에 대해 더 묻거나, 새 질문으로 이어가요
+  let ask;
+  if (Math.random() < 0.5) {
+    ask = pick(["왜 그렇게 생각했는지 궁금해! 👀", "그 얘기 더 해줄래?", "그 말 할 때 어떤 기분이었어?"]);
+    setPending("more");
+  } else {
+    ask = nextQuestion();
+  }
+  return "💌 " + open + "\n" + feel + (extra ? "\n" + extra : "") + "\n" + ask;
+}
+
+// 내 방에 남긴 말에 담긴 내용을 보고 식물이 느낀 점 (먼저 찾은 것 하나)
+// 말만으로 알 수 없으면 그날 질문(kind)을 참고해요 (예: 노래 제목만 적었을 때)
+function letterFeeling(answer, kind) {
+  const t = String(answer).replace(/\s/g, "");
+  const people = ["엄마", "아빠", "친구", "가족", "동생", "언니", "오빠", "누나", "할머니", "할아버지", "선생님", "짝꿍"].find((w) => t.includes(w));
+  const rules = [
+    [["고마", "감사", "덕분"], ["내가 더 고마워 💚 이 말 오래오래 기억할게", "고맙다는 말 들으니까 잎이 쑥 자라는 기분이야 🌱"]],
+    [["안녕", "좋은아침", "잘잤", "굿모닝", "일어나"], ["나도 안녕! 네 인사 듣고 기분 좋게 눈 떴어 🌅"]],
+    [["귀엽", "귀여", "예쁘", "이쁘", "사랑", "좋아"], ["그런 말 들으니까 부끄러워서 잎 끝이 살짝 빨개졌어 🥹", "히히 나도 네가 제일 좋아 💚"]],
+    [["잘크", "잘자라", "대단", "기특", "멋", "착해", "씩씩", "쑥쑥", "컸", "자랐"], ["칭찬 들으니까 더 쑥쑥 크고 싶어졌어 💪", "네가 알아봐주니까 너무 뿌듯해 ✨"]],
+    [["힘내", "화이팅", "파이팅", "응원"], ["응원 받았으니까 오늘도 힘낼게! 너도 같이 힘내자 ☀️"]],
+    [["맑", "햇빛", "햇살", "화창", "해가"], ["그럼 오늘은 광합성 하기 딱 좋은 날이다 ☀️"]],
+    [["비와", "비가", "비온", "비내", "흐림", "흐려", "우산"], ["그런 날엔 빗소리 들으면서 푹 쉬어야겠다 🌧️"]],
+    [["추워", "춥", "눈와", "눈이와", "눈내", "쌀쌀"], ["추운 날엔 나 창문에서 살짝 떨어뜨려줘 🧣"]],
+    [["더워", "덥"], ["더운 날엔 물 한 모금 더 마셔야겠다 💧"]],
+    [["노래", "음악", "곡"], ["그 노래 들으면서 잎을 살랑살랑 흔들어볼게 🎶"]],
+    [["먹", "쌈", "샐러드", "요리", "맛"], ["맛있게 먹어줄 생각하니까 빨리 크고 싶어졌어 🍽️"]],
+  ];
+  if (people) return people + josa(people, "이", "") + "랑 같이 나눌 생각하니까 빨리 크고 싶어졌어 🥹";
+  const hit = rules.find(([words]) => words.some((w) => t.includes(w)));
+  if (hit) return pick(hit[1]);
+  const byQuestion = {
+    song: "그 노래 들으면서 잎을 살랑살랑 흔들어볼게 🎶",
+    weather: "날씨 알려줘서 고마워! 그거 보고 광합성 계획 세울게 ☀️",
+    share: "같이 나눠 먹을 생각하니까 빨리 크고 싶어졌어 🥹",
+    cute: "그렇게 봐줘서 고마워 🥹 부끄러워서 잎 끝이 살짝 빨개졌어",
+    praise: "칭찬 들으니까 더 쑥쑥 크고 싶어졌어 💪",
+    thanks: "내가 더 고마워 💚 이 말 오래오래 기억할게",
+  }[kind];
+  if (byQuestion) return byQuestion;
+  return pick(["네가 해준 말 하나하나 다 기억하고 있어 🌱", "그 말 덕분에 오늘 하루가 반짝반짝했어 ✨", "너랑 이렇게 얘기 나누는 게 제일 좋아 💚"]);
 }
 
 // 오늘 아직 내 방 질문에 대답 안 했으면 하루 한 번 살짝 알려줘요

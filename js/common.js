@@ -980,16 +980,17 @@ const LOUNGE_KEY = "snackfarm_lounge_rooms";
 const LOUNGE_MSG_PREFIX = "snackfarm_lounge2_msg_";
 
 // 과자 캐릭터 (images/chars/*.webp)
+// color: 연한 테마색 (목록 아이콘 등) / bag: 실제 과자봉지 색 (소통방 배경) / dark: 배경이 진해서 글자를 흰색으로
 const SNACK_CHARS = {
-  ggotgerang: { name: "꽃게랑", color: "#ffd9c7" },
-  pokachip: { name: "포카칩", color: "#d6e8ff" },
-  postick: { name: "포스틱", color: "#dcdcff" },
-  yangparing: { name: "양파링", color: "#dff3c8" },
-  honeybutter: { name: "허니버터칩", color: "#fff1b8" },
-  jagalchi: { name: "자갈치", color: "#ffd6df" },
-  gamjakkang: { name: "감자깡", color: "#ffe2bf" },
-  concho: { name: "콘초", color: "#eedccf" },
-  bananakick: { name: "바나나킥", color: "#fff4b3" },
+  ggotgerang: { name: "꽃게랑", color: "#ffd9c7", bag: "#f2742b", dark: true },
+  pokachip: { name: "포카칩", color: "#d6e8ff", bag: "#1f6fd1", dark: true },
+  postick: { name: "포스틱", color: "#dcdcff", bag: "#2f3fc0", dark: true },
+  yangparing: { name: "양파링", color: "#dff3c8", bag: "#3aa648", dark: true },
+  honeybutter: { name: "허니버터칩", color: "#fff1b8", bag: "#f4c22c", dark: false },
+  jagalchi: { name: "자갈치", color: "#ffd6df", bag: "#e3304b", dark: true },
+  gamjakkang: { name: "감자깡", color: "#ffe2bf", bag: "#f39418", dark: false },
+  concho: { name: "콘초", color: "#eedccf", bag: "#5a3320", dark: true },
+  bananakick: { name: "바나나킥", color: "#fff4b3", bag: "#f8d936", dark: false },
 };
 
 // 미리 만들어둔 기본 방 - 방마다 과자 하나가 테마예요
