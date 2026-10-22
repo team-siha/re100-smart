@@ -195,18 +195,21 @@ function findPlant(text) {
 function understand(text) {
   const t = text.replace(/\s/g, "");
   if (isCrisis(t)) return "crisis";
-  if (has(t, ["레시피", "요리", "해먹", "해 먹", "만들어먹", "뭐먹", "먹을까", "반찬", "샐러드", "다이어트식", "식단"])) return "recipe";
-  if (has(t, ["고마워", "고맙", "감사", "땡큐", "thank", "덕분", "고마웡", "고마웠"])) return "thanks";
-  if (has(t, ["잘자", "굿밤", "굿나잇", "바이", "안녕히", "내일봐", "이만", "갈게"])) return "bye";
-  if (has(t, ["안녕", "하이", "hi", "hello", "반가", "ㅎㅇ"])) return "hello";
-  if (has(t, ["누구야", "누구니", "너는누구", "이름이뭐", "너이름"])) return "who";
+  // 초성도 알아들어요 (ㄱㅅ 감사, ㅂㅇ 바이, ㅈㅅ 죄송, ㅇㅋ 오케이, ㅊㅋ 축하 …)
+  if (has(t, ["레시피", "요리", "해먹", "해 먹", "만들어먹", "뭐먹", "먹을까", "반찬", "샐러드", "다이어트식", "식단", "ㄹㅅㅍ", "배고파", "ㅂㄱㅍ"])) return "recipe";
+  if (has(t, ["고마워", "고맙", "감사", "땡큐", "thank", "덕분", "고마웡", "고마웠", "ㄱㅅ", "ㄳ", "ㄱㅁㅇ"])) return "thanks";
+  if (has(t, ["잘자", "굿밤", "굿나잇", "바이", "안녕히", "내일봐", "이만", "갈게", "ㅂㅇ", "ㅂㅂ", "ㅃㅇ", "ㅃㅃ", "ㅇㄴㅎㄱㅅㅇ"])) return "bye";
+  if (has(t, ["안녕", "하이", "hi", "hello", "반가", "ㅎㅇ", "ㅇㄴㅎㅅㅇ", "ㅂㄱ"])) return "hello";
+  if (has(t, ["누구야", "누구니", "너는누구", "이름이뭐", "너이름", "ㄴㄱ"])) return "who";
   if (has(t, ["수확", "언제먹", "언제따", "다자라", "얼마나걸"])) return "harvest";
   if (has(t, ["물주", "물을", "물얼마", "물언제", "물은", "목말"])) return "water";
   if (has(t, ["햇빛", "햇볕", "햇살", "빛", "그늘"])) return "sun";
   if (has(t, ["시들", "노랗", "누렇", "말라", "죽어가", "축처", "병들", "식물이아", "잎이아", "화분이"])) return "sick";
   if (WORRY_TAGS.some((w) => has(t, w.keywords))) return "worry";
-  if (has(t, ["좋아", "행복", "신나", "기뻐", "기쁘", "최고", "설레", "재밌", "ㅎㅎ", "ㅋㅋ", "굿", "짱"])) return "happy";
-  if (has(t, ["미안", "죄송"])) return "sorry";
+  if (has(t, ["미안", "죄송", "ㅈㅅ", "ㅁㅇ", "쏘리", "sorry"])) return "sorry";
+  if (has(t, ["좋아", "행복", "신나", "기뻐", "기쁘", "최고", "설레", "재밌", "ㅎㅎ", "ㅋㅋ", "굿", "짱", "ㅊㅋ", "ㄱㅇㄷ", "개이득", "ㄷㄱㄷㄱ"])) return "happy";
+  if (/^(ㅇㅇ|ㅇㅋ|ㅇㅋㅇㅋ|ㅇㅇㅇ|응|응응|웅|웅웅|오키|오케이|ok|okay|그래|ㄱㄱ|ㅇㅈ|인정)$/i.test(t)) return "ok";
+  if (/^(ㄴㄴ|ㄴㄴㄴ|아니|아니야|노|no|ㄴ)$/i.test(t)) return "no";
   return "chat";
 }
 
@@ -218,7 +221,7 @@ function respond(text) {
   const intent = understand(text);
 
   // 고민 얘기 중이 아닐 때 다른 주제가 나오면 고민 흐름은 끝내요
-  if (intent !== "worry" && intent !== "chat" && intent !== "crisis") worryState = null;
+  if (!["worry", "chat", "crisis", "ok", "no"].includes(intent)) worryState = null;
 
   switch (intent) {
     case "crisis":
@@ -334,6 +337,20 @@ function respond(text) {
 
     case "sorry":
       reply(pick(["괜찮아! 하나도 신경 쓰지 마 💚", "에이 미안할 거 없어~ 우리 사이잖아 😊"]));
+      return;
+
+    // ㅇㅇ·ㅇㅋ / ㄴㄴ 처럼 짧게 대답했을 때
+    case "ok":
+    case "no":
+      if (worryState) {
+        encourage(call);
+        return;
+      }
+      reply(
+        intent === "ok"
+          ? pick(["응응! 😊 또 하고 싶은 얘기 있으면 말해줘!", "오키오키 👍 오늘 나 물은 줬어? 💧", "좋아좋아 🌱 다른 얘기도 해줘!"])
+          : pick(["앗 아니구나! 그럼 어떤 얘기 해볼까? 🌱", "알겠어~ 그럼 오늘 있었던 일 하나만 알려줘 👀"])
+      );
       return;
 
     case "worry": {

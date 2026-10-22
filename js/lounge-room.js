@@ -9,6 +9,12 @@ const rooms = loadLoungeRooms();
 const room = rooms.find((r) => r.id === roomId) || { id: roomId, name: "소통방", charId: "yangparing", members: 1 };
 const hostId = SNACK_CHARS[room.charId] ? room.charId : "yangparing";
 
+// 방 = 같은 과자봉지로 키우는 친구들의 모임! 이 방 친구들은 모두 이 방 과자봉지를 써요
+const ROOM_SNACK = SNACK_CHARS[hostId].name;
+function roomFriend(id) {
+  return Object.assign({}, VIRTUAL_FRIENDS[id] || VIRTUAL_FRIENDS.haneul, { snackName: ROOM_SNACK });
+}
+
 document.getElementById("roomTitle").textContent = room.name;
 document.getElementById("roomMembers").textContent = (room.builtin ? "AI 친구 " : "") + (room.members || 1);
 document.getElementById("stageName").textContent = SNACK_CHARS[hostId].name + " 방";
@@ -43,7 +49,7 @@ function renderMessages() {
       row.className = "rc-row me";
       row.innerHTML = time + '<div class="rc-bubble">' + escapeHtml(m.text) + "</div>";
     } else {
-      const friend = VIRTUAL_FRIENDS[m.user] || VIRTUAL_FRIENDS.haneul;
+      const friend = roomFriend(m.user);
       row.className = "rc-row";
       row.innerHTML =
         '<button class="rc-avatar" data-user="' + (m.user || "haneul") + '" aria-label="' + friend.name + ' 프로필">' +
@@ -62,8 +68,8 @@ function renderMessages() {
 chatWindow.addEventListener("click", (e) => {
   const btn = e.target.closest(".rc-avatar");
   if (!btn) return;
-  const f = VIRTUAL_FRIENDS[btn.dataset.user];
-  if (!f) return;
+  if (!VIRTUAL_FRIENDS[btn.dataset.user]) return;
+  const f = roomFriend(btn.dataset.user);
   const mood = MOODS.find((m) => m.id === f.moodId) || MOODS[0];
   document.getElementById("pmChar").innerHTML = getCharacterSvg(f.plantId);
   document.getElementById("pmName").innerHTML = escapeHtml(f.name) + " " + AI_BADGE;
@@ -178,7 +184,7 @@ function replyTo(text) {
 
   // 1) 내가 축하해주면 → 축하받은 친구가 고마워해요
   if (party && CONGRATS_RE.test(t)) {
-    const f = VIRTUAL_FRIENDS[party.user];
+    const f = roomFriend(party.user);
     say(
       party.user,
       pick([
@@ -196,7 +202,7 @@ function replyTo(text) {
   }
 
   const user = pickFriend();
-  const f = VIRTUAL_FRIENDS[user];
+  const f = roomFriend(user);
 
   // 2) 내 좋은 소식 → 친구들이 축하해줘요
   if (/새 잎|싹|수확|자랐|컸|피었|성공|합격|생일|해냈/.test(t) && !/\?|안 |못 /.test(t)) {
@@ -218,7 +224,7 @@ function replyTo(text) {
   if (/안녕|하이|ㅎㅇ|반가|처음|왔어요|들어왔/.test(t)) {
     say(user, pick(["안녕하세요 " + myName + "님!! 반가워요 👋", "오 " + myName + "님 어서 와요~ 🌱 뭐 키우세요?"]), 800);
     const other = pickFriend([user]);
-    if (Math.random() < 0.6) say(other, "반가워요! 저는 " + VIRTUAL_FRIENDS[other].plantNickname + " 키워요 ㅎㅎ", 1200);
+    if (Math.random() < 0.6) say(other, "반가워요! 저도 " + ROOM_SNACK + " 봉지에 " + VIRTUAL_FRIENDS[other].plantNickname + " 키워요 ㅎㅎ 같은 봉지 친구네요!", 1200);
     return;
   }
   // 5) 고맙다고 하면
@@ -252,7 +258,7 @@ function replyTo(text) {
   const r = Math.random();
   if (r < 0.35) {
     const asker = pickFriend([user]);
-    const a = VIRTUAL_FRIENDS[asker];
+    const a = roomFriend(asker);
     askCelebration(asker, pick([
       "저 오늘 " + a.plantNickname + " 새 잎 났어요!! 축하해주세요 🌱",
       "드디어 " + a.plantNickname + " 첫 수확했어요 ㅠㅠ 축하해주세요!",
