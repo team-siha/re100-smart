@@ -519,7 +519,7 @@ function respond(text) {
       const id = findPlant(text) || myPlant;
       reply(
         subjectOf(id, myPlant) + " 물을 좋아해 💧 흙 겉이 손으로 만져서 말랐을 때 흠뻑 주면 돼!\n" +
-          "과자봉지 화분은 아래에 구멍을 꼭 뚫어줘야 뿌리가 숨을 쉴 수 있어. '식물의 방'에서 물 주기도 해봐 🪴"
+          "'식물의 방'에서 물 주기도 해봐 🪴"
       );
       return;
     }
