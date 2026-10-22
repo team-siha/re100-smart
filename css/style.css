@@ -1925,30 +1925,30 @@ button.char-tile { font-family: inherit; color: var(--text); width: 100%; }
   overflow: hidden;
   background: transparent;
 }
-/* 방 주인 과자 캐릭터: 뒤에서 크게, 살짝 흔들 */
-.rc-host { position: absolute; right: 8px; top: 34px; width: 86px; opacity: 0.6; z-index: 1; animation: host-sway 4s ease-in-out infinite; }
-.rc-host img { width: 100%; display: block; }
-@keyframes host-sway {
-  0%, 100% { transform: rotate(-6deg); }
-  50% { transform: rotate(6deg); }
-}
-/* 풀밭 */
-.rc-grass {
+/* 과자 캐릭터들: 뒤에 빼곡히, 번갈아 흔들흔들 (방 주인은 가운데 크게) */
+.rc-crowd {
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 34px;
-  z-index: 2;
-  background:
-    radial-gradient(circle at 12px 0, transparent 11px, #8fd19e 12px) 0 0 / 24px 34px repeat-x;
-  opacity: 0.9;
+  left: -10px;
+  right: -10px;
+  top: 34px;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+}
+.rc-crowd .cw { width: 54px; margin: 0 -7px; animation: crowd-bob 1.6s ease-in-out infinite; animation-delay: calc(var(--i) * -0.35s); }
+.rc-crowd .cw:nth-child(odd) { margin-bottom: 14px; }
+.rc-crowd .cw.host { width: 82px; z-index: 2; margin-bottom: 0; }
+.rc-crowd .cw img { width: 100%; display: block; filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.18)); }
+@keyframes crowd-bob {
+  0%, 100% { transform: translateY(0) rotate(-5deg); }
+  50% { transform: translateY(-6px) rotate(5deg); }
 }
 /* 손잡은 상추들: 다 같이 좌우로 뛰어다니고, 하나씩 번갈아 통통 */
 .rc-dance {
   position: absolute;
   left: 50%;
-  bottom: 18px;
+  bottom: 8px;
   z-index: 3;
   display: flex;
   align-items: flex-end;

@@ -984,7 +984,7 @@ const LOUNGE_MSG_PREFIX = "snackfarm_lounge2_msg_";
 const SNACK_CHARS = {
   ggotgerang: { name: "꽃게랑", color: "#ffd9c7", bag: "#f2742b", dark: true },
   pokachip: { name: "포카칩", color: "#d6e8ff", bag: "#1f6fd1", dark: true },
-  postick: { name: "포스틱", color: "#dcdcff", bag: "#2f3fc0", dark: true },
+  postick: { name: "포스틱", color: "#dcdcff", bag: "#6f84ef", dark: true },
   yangparing: { name: "양파링", color: "#dff3c8", bag: "#3aa648", dark: true },
   honeybutter: { name: "허니버터칩", color: "#fff1b8", bag: "#f4c22c", dark: false },
   jagalchi: { name: "자갈치", color: "#ffd6df", bag: "#e3304b", dark: true },

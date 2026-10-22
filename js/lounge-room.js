@@ -25,8 +25,12 @@ roomChatEl.style.setProperty("--room-bag", SNACK_CHARS[hostId].bag);
 roomChatEl.classList.toggle("dark-bag", !!SNACK_CHARS[hostId].dark);
 document.body.style.background = SNACK_CHARS[hostId].bag;
 
-// 방 주인 과자 캐릭터는 뒤에서 지켜보고
-document.getElementById("roomHost").innerHTML = getSnackImg(hostId);
+// 과자 캐릭터들이 뒤에 빼곡히 모여 응원해요 (방 주인 과자는 가운데 크게)
+const others = Object.keys(SNACK_CHARS).filter((id) => id !== hostId);
+const crowdIds = others.slice(0, 4).concat(hostId, others.slice(4));
+document.getElementById("crowd").innerHTML = crowdIds
+  .map((id, i) => '<span class="cw' + (id === hostId ? " host" : "") + '" style="--i:' + i + '">' + getSnackImg(id) + "</span>")
+  .join("");
 
 // 상추들이 손잡고 뛰어놀아요 (캐릭터 사이사이 맞잡은 손)
 const DANCERS = ["cheongSangchu", "basil", "jeokSangchu", "mint", "romaine"];
