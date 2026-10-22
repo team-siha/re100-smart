@@ -143,11 +143,48 @@ function renderWeeks(record) {
       '<span class="wc-label">' + w + "주차</span>";
     grid.appendChild(cell);
   }
+  renderClaim(record);
   const done = Object.keys(record.photos).length;
   document.getElementById("streakText").innerHTML = missed
     ? "아쉽게도 " + missed + "주를 놓쳤어요 🥲 그래도 끝까지 기록해서 영상을 만들어요!"
     : "🔥 <b>" + done + "주 연속</b> 기록 중! " + (record.weeks - done) + "주만 더 올리면 " + STREAK_REWARD + "P!";
   show("step-weeks");
+}
+
+// ---------------- 사진 기록 포인트 ----------------
+// 사진을 올렸지만 아직 포인트를 안 받은 주차 (이 기능 전에 올린 사진 등)
+function unpaidWeeks(record) {
+  const paid = record.paidWeeks || {};
+  return Object.keys(record.photos).filter((w) => !paid[w]);
+}
+
+function renderClaim(record) {
+  const profile = loadProfile();
+  document.getElementById("recPointNow").textContent = ((profile && profile.points) || 0) + "P";
+  const weeks = unpaidWeeks(record);
+  const btn = document.getElementById("claimBtn");
+  btn.style.display = weeks.length ? "inline-block" : "none";
+  btn.textContent = "🎁 사진 기록 포인트 " + weeks.length * POINT_RULES.weeklyPhoto + "P 받기";
+}
+
+document.getElementById("claimBtn").addEventListener("click", () => {
+  const record = loadRecord();
+  const weeks = unpaidWeeks(record);
+  if (!weeks.length) return;
+  record.paidWeeks = record.paidWeeks || {};
+  weeks.forEach((w) => (record.paidWeeks[w] = true));
+  saveRecord(record);
+  const amount = weeks.length * POINT_RULES.weeklyPhoto;
+  addPoints(amount);
+  renderClaim(record);
+  showAlert(weeks.sort((a, b) => a - b).join(", ") + "주차 사진 기록 포인트예요!\n보유 포인트: " + getMyPoints() + "P", {
+    title: "+" + amount + "P 받았어요 🎉",
+  });
+});
+
+function getMyPoints() {
+  const profile = loadProfile();
+  return (profile && profile.points) || 0;
 }
 
 // 사진 속 잎 색 비율 재기 (작게 줄여서 픽셀마다 색상을 분류)
@@ -342,8 +379,8 @@ document.getElementById("photoInput").addEventListener("change", async (e) => {
   render();
   showAlert(
     cur + "주차 " + record.plantNickname + " 사진이 " + (replacing ? "바뀌었어요" : "기록됐어요") + "! 📸\n잎 색 " + Math.round(plantRatio * 100) + "% 확인 완료" +
-      (earn ? "\n+" + POINT_RULES.weeklyPhoto + "P 받았어요 🎉" : ""),
-    { title: replacing ? "사진 수정 완료" : "기록 완료" }
+      (earn ? "\n\n보유 포인트: " + getMyPoints() + "P" : ""),
+    { title: earn ? "기록 완료 · +" + POINT_RULES.weeklyPhoto + "P 받았어요 🎉" : replacing ? "사진 수정 완료" : "기록 완료" }
   );
 });
 
