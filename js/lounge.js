@@ -13,7 +13,7 @@ function roomSummary(room) {
   let preview = "아직 대화가 없어요. 먼저 인사해보세요!";
   if (last) {
     const friend = VIRTUAL_FRIENDS[last.user];
-    preview = (last.me ? "나: " : friend ? friend.name + ": " : "") + last.text;
+    preview = (last.me ? "나: " : friend ? friend.name + "(AI): " : "") + last.text;
   }
   return { last, unread, preview };
 }
@@ -40,7 +40,7 @@ function renderRoomList() {
         '<a class="talk-row" href="lounge-room.html?id=' + encodeURIComponent(room.id) + '">' +
         '<span class="talk-avatar" style="background:' + SNACK_CHARS[charId].color + '">' + getSnackImg(charId) + "</span>" +
         '<span class="talk-body"><span class="talk-name">' + escapeHtml(room.name) +
-        ' <em>' + (room.members || 1) + "</em></span>" +
+        ' <em>' + (room.builtin ? "AI 친구 " : "") + (room.members || 1) + "</em></span>" +
         '<span class="talk-preview">' + escapeHtml(s.preview) + "</span></span>" +
         '<span class="talk-meta"><span class="talk-time">' + formatChatTime(s.last && s.last.at) + "</span>" +
         (s.unread ? '<span class="talk-badge">' + s.unread + "</span>" : "") + "</span>" +

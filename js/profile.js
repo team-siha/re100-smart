@@ -47,7 +47,8 @@ let selectedMoodId = "happy";
 let selectedGender = "";
 const scores = {};
 
-const sections = ["step-summary", "step-edit", "step-intro", "step-mbti", "step-result"];
+const sections = ["step-summary", "step-edit", "step-intro", "step-mbti", "step-result", "step-name"];
+let selectedSnack = "";
 function showStep(id) {
   sections.forEach((s) => (document.getElementById(s).style.display = s === id ? "block" : "none"));
   window.scrollTo(0, 0);
@@ -67,13 +68,14 @@ function showSummary(profile) {
     "<li><span>과자봉지</span><b>" + escapeHtml(profile.snackName || "-") + "</b></li>" +
     "<li><span>내 식물</span><b>" + plant.name + (profile.plantNickname ? " (" + escapeHtml(profile.plantNickname) + ")" : "") + "</b></li>" +
     "<li><span>포인트</span><b>" + (profile.points || 0) + "P</b></li>";
+  document.getElementById("summaryTraitsTitle").textContent = "🌱 내 " + plant.name + " 특징 · 효능 보기";
+  document.getElementById("summaryTraits").innerHTML = renderPlantTraits(profile.plantId);
   showStep("step-summary");
 }
 
 // ---------------- 프로필 수정 ----------------
 const moodChipsEl = document.getElementById("moodChips");
-const moodBarFill = document.getElementById("moodBarFill");
-const moodEmoji = document.getElementById("moodEmoji");
+const moodValue = document.getElementById("moodValue");
 const moodIntensity = document.getElementById("moodIntensity");
 
 function renderMoodChips() {
@@ -92,11 +94,11 @@ function renderMoodChips() {
   });
 }
 
+// 고른 기분이 얼마나 큰지: 슬라이더 하나로 (색은 고른 기분 색)
 function updateMoodBar() {
   const mood = MOODS.find((m) => m.id === selectedMoodId);
-  moodBarFill.style.width = moodIntensity.value + "%";
-  moodBarFill.style.background = mood.color;
-  moodEmoji.textContent = mood.emoji;
+  moodIntensity.style.accentColor = mood.color;
+  moodValue.textContent = mood.emoji + " " + mood.label + " " + moodIntensity.value + "%";
 }
 
 moodIntensity.addEventListener("input", updateMoodBar);
@@ -113,7 +115,16 @@ document.getElementById("genderSeg").addEventListener("click", (e) => {
 
 function openEdit(profile) {
   document.getElementById("inputAge").value = profile.age || "";
-  document.getElementById("inputSnack").value = profile.snackName || "";
+  const grid = document.getElementById("snackGrid");
+  grid.dataset.other = "";
+  // 이벤트가 겹치지 않게 그리드를 새로 만들어요
+  const fresh = grid.cloneNode(false);
+  grid.replaceWith(fresh);
+  const snackInput = document.getElementById("inputSnack");
+  const freshInput = snackInput.cloneNode(false);
+  freshInput.value = "";
+  snackInput.replaceWith(freshInput);
+  setupSnackPicker(fresh, freshInput, profile.snackName || "", (name) => (selectedSnack = name));
   document.getElementById("inputPlantName").value = profile.plantNickname || "";
   selectedMoodId = profile.moodId || "happy";
   moodIntensity.value = profile.moodIntensity || 60;
@@ -128,7 +139,7 @@ document.getElementById("cancelEditBtn").addEventListener("click", () => showSum
 
 document.getElementById("saveEditBtn").addEventListener("click", () => {
   const age = document.getElementById("inputAge").value.trim();
-  const snack = document.getElementById("inputSnack").value.trim();
+  const snack = selectedSnack;
   const plantName = document.getElementById("inputPlantName").value.trim();
   if (!age || !selectedGender || !snack || !plantName) {
     showAlert("나이, 성별, 사용할 과자봉지, 식물 이름을\n모두 입력해주세요!", { title: "아직 빈 칸이 있어요" });
@@ -230,11 +241,23 @@ function showResult() {
     '<div class="mp-type">' + plant.type + "</div>" +
     '<div class="name">' + plant.name + "</div>" +
     '<div class="desc">' + plant.desc + "</div>";
+  document.getElementById("resultTraits").innerHTML = renderPlantTraits(bestId);
   document.getElementById("plantNameLabel").textContent = "내 " + plant.name + "의 이름을 지어주세요 🌱";
   const nameInput = document.getElementById("plantNameInput");
   nameInput.value = profile.plantId === bestId ? profile.plantNickname || "" : "";
   updateResultLine();
 }
+
+function showNameStep() {
+  const plant = PLANTS[resultPlantId];
+  document.getElementById("nameTitle").textContent = "🌱 내 " + plant.name + "에게 이름을 지어주세요";
+  document.getElementById("nameChar").innerHTML = getCharacterSvg(resultPlantId);
+  showStep("step-name");
+  document.getElementById("plantNameInput").focus();
+}
+
+document.getElementById("toNameBtn").addEventListener("click", showNameStep);
+document.getElementById("nameBackBtn").addEventListener("click", () => showStep("step-result"));
 
 document.getElementById("plantNameInput").addEventListener("input", updateResultLine);
 document.getElementById("yesBtn").addEventListener("click", () => answer(true));

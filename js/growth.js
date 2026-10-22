@@ -1,10 +1,10 @@
-// ② 내 식물 기록하기 - 목적(샐러드용/완전체) 선택 → 주차별 사진 → 빠짐없이 올리면 300P → 성장 영상 → 다음 작물(장바구니)
+// ② 내 식물 기록하기 - 목적(샐러드용/완전체) 선택 → 주차별 사진(주마다 50P) → 빠짐없이 올리면 500P 더 → 성장 영상 → 다음 작물(장바구니)
 
 requireProfile();
 renderTabbar("record");
 
 const DAY = 86400000;
-const STREAK_REWARD = 300;
+const STREAK_REWARD = POINT_RULES.streakBonus;
 let pickedPurpose = null;
 
 function show(id) {
@@ -146,7 +146,7 @@ function renderWeeks(record) {
   const done = Object.keys(record.photos).length;
   document.getElementById("streakText").innerHTML = missed
     ? "아쉽게도 " + missed + "주를 놓쳤어요 🥲 그래도 끝까지 기록해서 영상을 만들어요!"
-    : "🔥 <b>" + done + "주 연속</b> 기록 중! " + (record.weeks - done) + "주만 더 올리면 300P!";
+    : "🔥 <b>" + done + "주 연속</b> 기록 중! " + (record.weeks - done) + "주만 더 올리면 " + STREAK_REWARD + "P!";
   show("step-weeks");
 }
 
@@ -332,11 +332,17 @@ document.getElementById("photoInput").addEventListener("change", async (e) => {
     return;
   }
   record.photos[cur] = shot.dataUrl;
+  // 주차마다 처음 올릴 때 한 번만 포인트 (지웠다가 다시 올려도 또 받지 않게)
+  record.paidWeeks = record.paidWeeks || {};
+  const earn = !replacing && !record.paidWeeks[cur];
+  if (earn) record.paidWeeks[cur] = true;
   saveRecord(record);
+  if (earn) addPoints(POINT_RULES.weeklyPhoto);
   closeViewer();
   render();
   showAlert(
-    cur + "주차 " + record.plantNickname + " 사진이 " + (replacing ? "바뀌었어요" : "기록됐어요") + "! 📸\n잎 색 " + Math.round(plantRatio * 100) + "% 확인 완료",
+    cur + "주차 " + record.plantNickname + " 사진이 " + (replacing ? "바뀌었어요" : "기록됐어요") + "! 📸\n잎 색 " + Math.round(plantRatio * 100) + "% 확인 완료" +
+      (earn ? "\n+" + POINT_RULES.weeklyPhoto + "P 받았어요 🎉" : ""),
     { title: replacing ? "사진 수정 완료" : "기록 완료" }
   );
 });

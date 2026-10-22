@@ -5,7 +5,7 @@
 requireLogin();
 renderTabbar("chat");
 
-const CRISIS_KEYWORDS = ["죽어", "죽고싶", "자살", "사라지고싶", "끝내고싶", "죽을까", "살기싫"];
+// 위기 신호 확인(isCrisis)과 나쁜 말 필터는 common.js에 있어요 - 소통방과 같이 써요
 
 // 부정적인 말 → 고민 종류 (먼저 위로하고, 또래 친구 소개까지)
 const WORRY_TAGS = [
@@ -64,6 +64,38 @@ function getProfileOrDefault() {
   return loadProfile() || { name: "손님", snackName: "양파링", plantId: "basil" };
 }
 
+// 받침 있으면 a, 없으면 b (씩씩이 → "는", 초록 → "은")
+function josa(word, a, b) {
+  const code = String(word).charCodeAt(String(word).length - 1) - 0xac00;
+  return code >= 0 && code <= 11171 && code % 28 ? a : b;
+}
+
+// 새싹톡 AI = 내가 키우는 식물 (이름으로 연동)
+const chatProfile = getProfileOrDefault();
+const MY_CALL = getPlantCallName(chatProfile);
+const MY_PLANT_NAME = (PLANTS[chatProfile.plantId] || PLANTS.basil).name;
+document.getElementById("chatTitle").textContent = "새싹톡 · " + MY_CALL;
+document.getElementById("chatSub").textContent =
+  "내 " + MY_PLANT_NAME + " " + MY_CALL + josa(MY_CALL, "이", "") + "에게 오늘 하루를 편하게 말해보세요";
+chatInput.placeholder = MY_CALL + "에게 오늘 있었던 일을 얘기해보세요...";
+
+// 그 작물이 내 식물이면 "나는", 다른 작물이면 "바질은"
+function subjectOf(id, myPlant) {
+  return id === myPlant ? "나는" : PLANTS[id].name + josa(PLANTS[id].name, "은", "는");
+}
+
+function introLine(profile) {
+  return "나는 네 과자봉지 " + profile.snackName + "에서 자라는 " + MY_CALL + josa(MY_CALL, "이야", "야") + " 🌱";
+}
+
+// 첫 인사: "안녕 시하야! 나는 네 과자봉지 포스틱에서 자라는 씩씩이야 🌱"
+function greetingText(profile) {
+  return (
+    "안녕 " + profile.name + josa(profile.name, "아", "야") + "! " + introLine(profile) +
+    "\n오늘 하루는 어땠어? 고민도, 레시피도, 나 키우는 법도 편하게 물어봐!"
+  );
+}
+
 // 후보 중 하나를 고르되, 같은 종류의 대답에서 지난번과 같은 문장(틀)은 피해요
 const lastPicked = {};
 function pick(list) {
@@ -96,7 +128,7 @@ function renderMessages() {
       card.className = "friend-card";
       card.innerHTML =
         '<div class="row"><div class="char-box small" style="flex:0 0 52px;">' + getCharacterSvg(f.plantId) + "</div><div>" +
-        '<div class="name">' + escapeHtml(f.name) + "</div>" +
+        '<div class="name">' + escapeHtml(f.name) + " " + AI_BADGE + "</div>" +
         '<div class="meta">' + escapeHtml(formatProfileLine(f)) + "</div>" +
         "</div></div>" +
         '<div class="tag">#' + escapeHtml(m.tag) + " 같이 나눠요</div>" + friendRoomLink(f);
@@ -136,13 +168,20 @@ function reply(text, delay) {
 function initGreeting() {
   if (messages.length === 0) {
     const profile = getProfileOrDefault();
-    pushMessage({
-      role: "ai",
-      text:
-        "안녕 " + profile.name + "! 나는 네 과자봉지 " + profile.snackName +
-        "에서 자라난 식물 마음친구야 🌱\n오늘 하루는 어땠어? 고민도, 레시피도, 키우는 법도 편하게 물어봐!",
-    });
+    pushMessage({ role: "ai", text: greetingText(profile) });
   } else {
+    // 예전 대화의 첫 인사("…식물 마음친구야")도 지금 내 식물 이름으로 바꿔요
+    const first = messages[0];
+    if (first && first.role === "ai" && first.text.startsWith("안녕 ")) {
+      first.text = greetingText(getProfileOrDefault());
+    }
+    // "너 누구야?"에 했던 예전 대답도 같이 바꿔요
+    messages.forEach((m) => {
+      if (m.role === "ai" && m.text.includes("식물 마음친구야")) {
+        m.text = m.text.replace(/나는 네 과자봉지 .*?에서 자라난 식물 마음친구야 🌱/, introLine(getProfileOrDefault()));
+      }
+    });
+    saveChat(messages);
     renderMessages();
   }
 }
@@ -155,7 +194,7 @@ function findPlant(text) {
 // ---------------- 말 알아듣기 ----------------
 function understand(text) {
   const t = text.replace(/\s/g, "");
-  if (has(t, CRISIS_KEYWORDS)) return "crisis";
+  if (isCrisis(t)) return "crisis";
   if (has(t, ["레시피", "요리", "해먹", "해 먹", "만들어먹", "뭐먹", "먹을까", "반찬", "샐러드", "다이어트식", "식단"])) return "recipe";
   if (has(t, ["고마워", "고맙", "감사", "땡큐", "thank", "덕분", "고마웡", "고마웠"])) return "thanks";
   if (has(t, ["잘자", "굿밤", "굿나잇", "바이", "안녕히", "내일봐", "이만", "갈게"])) return "bye";
@@ -197,7 +236,7 @@ function respond(text) {
       const plant = PLANTS[id];
       reply(
         pick([
-          plant.name + " 레시피 알려줄게! 🍽️ 가볍고 맛있어서 다이어트에도 딱이야.",
+          plant.name + " 레시피 알려줄게! 🍽️ 직접 키워서 수확한 채소라 더 맛있고 건강해.",
           "좋아! " + plant.name + "(으)로 만드는 건강 레시피야 🥗 같이 만들어볼래?",
           "배고프구나? ㅎㅎ " + plant.name + " 레시피 바로 간다 🍳",
         ])
@@ -212,7 +251,7 @@ function respond(text) {
     case "thanks":
       reply(
         pick([
-          "에이~ 내가 더 고마워! 💚 " + call + "도 옆에서 뿌듯해하고 있어.",
+          "에이~ 내가 더 고마워! 💚 " + call + " 지금 잎까지 뿌듯해하고 있어.",
           "고맙다는 말 들으니까 잎이 쑥 자라는 기분이야 🌱 히히",
           "천만에! 언제든 또 놀러와, 나는 늘 여기 있을게 😊",
           "그렇게 말해줘서 나도 힘이 나! 오늘도 같이 힘내자 ☀️",
@@ -224,7 +263,7 @@ function respond(text) {
     case "bye":
       reply(
         pick([
-          "잘 가! 오늘도 수고 많았어 🌙 " + call + " 물 주는 것도 잊지 마~",
+          "잘 가! 오늘도 수고 많았어 🌙 나 물 주는 것도 잊지 마~ 💧",
           "내일 또 만나! 푹 쉬어야 해 💤",
           "안녕~ 좋은 꿈 꿔! 나도 화분 속에서 꿀잠 잘게 😴",
         ])
@@ -235,27 +274,27 @@ function respond(text) {
       reply(
         pick([
           "안녕 " + profile.name + "! 🌱 오늘은 어떤 하루였어?",
-          "반가워! 오늘 " + call + "은(는) 잘 지내? 😊",
+          "반가워! 나 " + call + josa(call, "이", "") + "야, 오늘도 와줘서 고마워 😊",
           "하이하이~ 기다리고 있었어! 무슨 얘기 해볼까?",
         ])
       );
       return;
 
     case "who":
-      reply("나는 네 과자봉지 " + profile.snackName + "에서 자라난 식물 마음친구야 🌱\n고민 상담도, 레시피도, 키우는 법도 다 물어봐!");
+      reply(introLine(profile) + "\n네가 매일 돌봐줘서 쑥쑥 크고 있어! 고민 상담도, 레시피도, 나 키우는 법도 다 물어봐!");
       return;
 
     case "harvest": {
       const id = findPlant(text) || myPlant;
       const plan = GROWTH_PLANS[id];
-      reply(PLANTS[id].name + "는 수확까지 " + plan.range + " 걸려! (" + plan.note + ")\n'내 식물 기록'에 매주 사진을 올리면 다 자랄 때까지 같이 지켜볼 수 있어 📸");
+      reply(subjectOf(id, myPlant) + " 수확까지 " + plan.range + " 걸려! (" + plan.note + ")\n'내 식물 기록'에 매주 사진을 올리면 다 자랄 때까지 같이 지켜볼 수 있어 📸");
       return;
     }
 
     case "water": {
       const id = findPlant(text) || myPlant;
       reply(
-        PLANTS[id].name + "는 물을 좋아해 💧 흙 겉이 손으로 만져서 말랐을 때 흠뻑 주면 돼!\n" +
+        subjectOf(id, myPlant) + " 물을 좋아해 💧 흙 겉이 손으로 만져서 말랐을 때 흠뻑 주면 돼!\n" +
           "과자봉지 화분은 아래에 구멍을 꼭 뚫어줘야 뿌리가 숨을 쉴 수 있어. '식물의 방'에서 물 주기도 해봐 🪴"
       );
       return;
@@ -265,26 +304,29 @@ function respond(text) {
       const id = findPlant(text) || myPlant;
       reply(
         PLANT_FACTS[id] && !PLANT_FACTS[id].sun
-          ? PLANTS[id].name + "는 강한 햇빛보다 밝은 그늘을 좋아해 🌤️ 창가에서 살짝 떨어진 곳이 좋아!"
-          : PLANTS[id].name + "는 햇빛을 정말 좋아해 ☀️ 하루 4~6시간 정도 창가에 두면 쑥쑥 커!"
+          ? subjectOf(id, myPlant) + " 강한 햇빛보다 밝은 그늘을 좋아해 🌤️ 창가에서 살짝 떨어진 곳이 좋아!"
+          : subjectOf(id, myPlant) + " 햇빛을 정말 좋아해 ☀️ 하루 4~6시간 정도 창가에 두면 쑥쑥 커!"
       );
       return;
     }
 
-    case "sick":
+    case "sick": {
+      const other = findPlant(text);
+      const who = other && other !== myPlant ? PLANTS[other].name + josa(PLANTS[other].name, "이", "가") + " 아픈 것 같아?" : "나 어디 아파 보여?";
       reply(
-        "헉, " + call + "이(가) 아픈 것 같아? 🥺 이렇게 확인해봐!\n" +
+        "헉, " + who + " 🥺 이렇게 확인해줘!\n" +
           "① 흙이 너무 축축하면 물을 잠깐 쉬어주고\n② 바싹 말랐으면 흠뻑 물 주기\n③ 잎이 노랗게 변하면 햇빛 잘 드는 곳으로 옮겨줘\n" +
           "그래도 걱정되면 '식물의 방' 상점의 영양제도 있어 🧪"
       );
       return;
+    }
 
     case "happy":
       reply(
         pick([
           "우와 좋다!! 🎉 네가 기분 좋으니까 나도 잎이 반짝반짝해 ✨",
           "히히 나까지 신나! 무슨 좋은 일 있었는지 더 알려줘 😆",
-          "최고야! 오늘 같은 날은 " + call + "한테도 자랑해주자 🌱",
+          "최고야! 그런 얘기는 언제든 나 " + call + "한테 제일 먼저 자랑해줘 🌱",
           "좋은 기운 받았다~ 💚 그 기분 오래오래 가길!",
         ])
       );
@@ -322,7 +364,7 @@ function respond(text) {
           "엥? 그게 무슨 말이야? 자세히 알려줘!",
           "오~ 언제 그랬어? 더 말해줘 ㅎㅎ",
           "그래서 너는 어땠는데? 기분은 괜찮아?",
-          "근데 오늘 " + call + "은(는) 어떤 모습이야? 📸",
+          "근데 오늘 나 물은 줬어? 💧 ㅎㅎ",
         ])
       );
     }
@@ -335,8 +377,8 @@ function encourage(call) {
   worryState = null;
   reply(
     pick([
-      "얘기해줘서 고마워. 넌 과자봉지 하나로 지구를 지키는 멋진 사람이야 💚\n" + call + "에게도 넌 세상에서 제일 소중한 사람이고!",
-      "지금까지 정말 잘 버텨왔어. 오늘은 스스로를 꼭 안아주자 🫂\n" + call + "도 네 옆에서 응원하고 있어 🌱",
+      "얘기해줘서 고마워. 넌 과자봉지 하나로 지구를 지키는 멋진 사람이야 💚\n나 " + call + "에게도 넌 세상에서 제일 소중한 사람이고!",
+      "지금까지 정말 잘 버텨왔어. 오늘은 스스로를 꼭 안아주자 🫂\n나 " + call + josa(call, "이", "") + "도 네 옆에서 응원하고 있어 🌱",
       "그런 마음이 드는 건 당연해. 너무 혼자 다 짊어지지 마!\n천천히 가도 괜찮아, 식물도 하루아침에 크지 않잖아 🌿",
     ])
   );
@@ -345,9 +387,9 @@ function encourage(call) {
     pushMessage({
       role: "ai",
       text:
-        "너랑 비슷한 고민을 가진 또래 친구 " + VIRTUAL_FRIENDS[worry.friend].name + "을(를) 소개해줄게.\n" +
-        VIRTUAL_FRIENDS[worry.friend].snackName + " 방에 자주 있으니까 위 버튼으로 놀러 가봐!\n" +
-        "서로 공통점을 나누다 보면 어느새 친해져 있을 거야 🌿",
+        "비슷한 고민을 가진 예시(AI) 친구 " + VIRTUAL_FRIENDS[worry.friend].name + "을(를) 소개해줄게.\n" +
+        "진짜 사람은 아니지만, " + VIRTUAL_FRIENDS[worry.friend].snackName + " 방에서 같이 얘기 나눌 수 있어!\n" +
+        "위 버튼으로 놀러 가봐 🌿",
     });
   }, 1000);
 }
@@ -355,8 +397,9 @@ function encourage(call) {
 function handleSend() {
   const text = chatInput.value.trim();
   if (!text) return;
+  // 위기 신호는 욕 필터보다 먼저 - 욕이 섞여 있어도 109 안내가 나가요
   // 나쁜 말이 있으면 입력하지 않은 것으로 처리
-  if (!checkKindWords(text)) {
+  if (!isCrisis(text) && !checkKindWords(text)) {
     chatInput.value = "";
     return;
   }

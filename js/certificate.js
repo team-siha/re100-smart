@@ -98,7 +98,13 @@ function showQuizResult() {
   document.getElementById("step-quiz").style.display = "none";
   document.getElementById("step-quiz-result").style.display = "block";
 
-  const points = scoreToPoints(correctCount);
+  // 포인트는 하루 첫 시험만 (같은 문제를 계속 풀어서 모으지 않게)
+  const firstToday = profile.quizRewardDay !== todayKey();
+  const points = firstToday ? scoreToPoints(correctCount) : 0;
+  if (firstToday) {
+    profile.quizRewardDay = todayKey();
+    saveProfile(profile);
+  }
   if (points > 0) addPoints(points);
   const grade = scoreToGrade(correctCount);
 
@@ -108,5 +114,6 @@ function showQuizResult() {
     '<div class="cert-title">' + grade.title + "</div>" +
     '<div class="cert-grade">' + grade.grade + "</div>" +
     '<div class="cert-desc">' + correctCount + " / " + quiz.length + " 문제 정답! 내 <b>" + escapeHtml(getPlantCallName(profile)) +
-    "</b> 기준으로 채점했어요.<br/>획득 포인트: <b>" + points + "P</b></div>";
+    "</b> 기준으로 채점했어요.<br/>" +
+    (firstToday ? "획득 포인트: <b>" + points + "P</b>" : "오늘은 이미 포인트를 받았어요. 내일 또 도전해요!") + "</div>";
 }

@@ -11,6 +11,17 @@
 <meta name="format-detection" content="telephone=no" />
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
 <link rel="manifest" href="manifest.json" />
+<!-- 링크 공유 미리보기 (카톡·문자 등) -->
+<meta name="description" content="과자봉지 화분에 채소를 키우며 마음도 돌보는 식물 친구 앱" />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="RE100:SMART" />
+<meta property="og:title" content="RE100:SMART · 나를 살리는 식물" />
+<meta property="og:description" content="과자봉지 화분에 채소를 키우며 마음도 돌보는 식물 친구 앱 🌱" />
+<meta property="og:url" content="https://team-siha.github.io/re100-smart/" />
+<meta property="og:image" content="https://team-siha.github.io/re100-smart/images/icons/icon-512.png" />
+<meta property="og:image:width" content="512" />
+<meta property="og:image:height" content="512" />
+<meta name="twitter:card" content="summary" />
 <link rel="icon" href="images/icons/icon-192.png" />
 <link rel="apple-touch-icon" href="images/icons/icon-180.png" />
 <title>RE100:SMART | 프로필 &amp; MBTI 식집사 테스트</title>
@@ -31,15 +42,24 @@
         <div class="mp-line" id="summaryLine"></div>
         <ul class="mp-info" id="summaryInfo"></ul>
       </div>
+      <!-- 내 식물 특징 · 효능 (눌러서 펼치기) -->
+      <details class="summary-traits">
+        <summary id="summaryTraitsTitle">🌱 내 식물 특징 · 효능</summary>
+        <div id="summaryTraits"></div>
+      </details>
       <button class="btn" id="editProfileBtn">프로필 수정하기</button>
       <button class="btn ghost" id="retestBtn" style="margin-top:8px;">MBTI 식집사 테스트 다시 하기</button>
+      <div class="device-notice">
+        📱 내 정보와 기록은 <b>이 폰에서만 이어져요.</b> 다른 폰에서는 처음부터 시작돼요.<br />
+        같은 폰을 함께 쓰면 이름만 알아도 내 기록과 대화가 보일 수 있어요.
+      </div>
       <button class="logout-btn" id="logoutBtn" type="button">로그아웃</button>
     </section>
 
     <!-- 프로필 수정 -->
     <section id="step-edit" class="card" style="display:none;">
       <h2>프로필 수정</h2>
-      <div class="ob-safe">🔒 내 또래의 친구들을 찾기 위해서 적는 정보예요. 안심하셔도 돼요 🌿</div>
+      <div class="ob-safe">🔒 적은 정보는 <b>내 프로필에 사용될 거예요</b> 🌿</div>
       <div class="ob-row">
         <div class="field">
           <label for="inputAge">나이</label>
@@ -57,15 +77,20 @@
       <div class="field">
         <label>오늘 상태</label>
         <div class="chip-group" id="moodChips"></div>
-        <div class="mood-bar-wrap">
-          <div class="mood-bar-track"><div class="mood-bar-fill" id="moodBarFill"></div></div>
-          <span class="mood-emoji" id="moodEmoji">🙂</span>
+        <div class="mood-strength">
+          <span>이 기분이 얼마나 큰가요?</span>
+          <b id="moodValue"></b>
         </div>
-        <input type="range" id="moodIntensity" min="10" max="100" value="60" style="width:100%; margin-top:8px;" />
+        <input type="range" id="moodIntensity" class="mood-range" min="10" max="100" value="60" aria-label="기분의 크기" />
+        <div class="mood-ends"><span>조금</span><span>아주 많이</span></div>
       </div>
       <div class="field">
-        <label for="inputSnack">내가 사용할 과자봉지</label>
-        <input type="text" id="inputSnack" placeholder="예) 포스틱" maxlength="12" />
+        <label>내가 사용할 과자봉지</label>
+        <div class="snack-grid" id="snackGrid"></div>
+      </div>
+      <div class="field snack-other" style="display:none;">
+        <label for="inputSnack">과자 이름을 적어주세요</label>
+        <input type="text" id="inputSnack" placeholder="예) 꼬북칩" maxlength="12" />
       </div>
       <div class="field">
         <label for="inputPlantName">내 식물 이름</label>
@@ -101,17 +126,27 @@
       <button class="q-back" id="qBackBtn" type="button">← 이전 질문</button>
     </section>
 
-    <!-- 결과 + 식물 이름 짓기 -->
+    <!-- 결과 (1/3) -->
     <section id="step-result" class="card" style="display:none;">
       <h2>🎉 당신에게 맞는 식물은?</h2>
       <div class="plant-result" id="plantResult"></div>
+      <!-- 결과 바로 아래: 특징 · 효능 -->
+      <div id="resultTraits"></div>
+      <button class="btn" id="toNameBtn">이름 지어주기 →</button>
+      <button class="q-back" id="resultBackBtn" type="button">← 마지막 질문 다시 답하기</button>
+    </section>
+
+    <!-- 식물 이름 짓기 -->
+    <section id="step-name" class="card" style="display:none;">
+      <h2 id="nameTitle">🌱 이름을 지어주세요</h2>
+      <div class="char-box medium name-char" id="nameChar"></div>
       <div class="field name-plant">
         <label for="plantNameInput" id="plantNameLabel">내 식물의 이름을 지어주세요</label>
         <input type="text" id="plantNameInput" placeholder="예) 씩씩이" maxlength="8" />
       </div>
       <div class="ob-example" id="resultLine"></div>
       <button class="btn" id="saveProfileBtn">저장하고 시작하기</button>
-      <button class="q-back" id="resultBackBtn" type="button">← 마지막 질문 다시 답하기</button>
+      <button class="q-back" id="nameBackBtn" type="button">← 결과 다시 보기</button>
     </section>
   </main>
 </div>

@@ -1,5 +1,6 @@
 // 첫 화면 - "RE:100 스마트와 함께하기" 프로필 입력
-// 예전 이름이면 저장된 정보를 그대로 불러오고, 새 이름이면 프로필을 다 입력해야 시작할 수 있어요.
+// 예전 이름이면 저장된 정보를 그대로 불러오고, 새 이름이면 3단계로 나눠서 입력해요.
+// 1단계: 이름 / 나이 / 성별 → 2단계: 오늘 상태 → 3단계: 과자봉지 고르기
 
 const nicknameInput = document.getElementById("nicknameInput");
 const welcomeBackBox = document.getElementById("welcomeBackBox");
@@ -7,12 +8,23 @@ const newUserFields = document.getElementById("newUserFields");
 const enterBtn = document.getElementById("enterBtn");
 const recentBox = document.getElementById("recentBox");
 const moodChipsEl = document.getElementById("moodChips");
-const moodBarFill = document.getElementById("moodBarFill");
-const moodEmoji = document.getElementById("moodEmoji");
+const moodValue = document.getElementById("moodValue");
 const moodIntensity = document.getElementById("moodIntensity");
 
 let selectedMoodId = "happy";
 let selectedGender = "";
+let selectedSnack = "";
+
+const STEP_TITLES = ["", "나를 소개해요", "오늘 상태", "과자봉지 고르기"];
+
+function showObStep(n) {
+  [1, 2, 3].forEach((i) => (document.getElementById("obStep" + i).style.display = i === n ? "block" : "none"));
+  document.querySelectorAll("#obProgress .dot").forEach((d, i) => d.classList.toggle("on", i < n));
+  document.getElementById("obProgressText").textContent = n + " / 3 · " + STEP_TITLES[n];
+  window.scrollTo(0, 0);
+}
+
+document.querySelectorAll("[data-go]").forEach((b) => b.addEventListener("click", () => showObStep(Number(b.dataset.go))));
 
 function renderMoodChips() {
   moodChipsEl.innerHTML = "";
@@ -30,11 +42,11 @@ function renderMoodChips() {
   });
 }
 
+// 고른 기분이 얼마나 큰지: 슬라이더 하나로 (색은 고른 기분 색)
 function updateMoodBar() {
   const mood = MOODS.find((m) => m.id === selectedMoodId);
-  moodBarFill.style.width = moodIntensity.value + "%";
-  moodBarFill.style.background = mood.color;
-  moodEmoji.textContent = mood.emoji;
+  moodIntensity.style.accentColor = mood.color;
+  moodValue.textContent = mood.emoji + " " + mood.label + " " + moodIntensity.value + "%";
 }
 
 moodIntensity.addEventListener("input", updateMoodBar);
@@ -56,11 +68,13 @@ function updateWelcomeBack() {
       "🌿 다시 오셨네요! 이전 정보를 그대로 불러올게요.<br /><b>" + escapeHtml(formatProfileLine(saved)) +
       "</b> · " + (saved.points || 0) + "P";
     newUserFields.style.display = "none";
+    document.getElementById("obProgress").style.display = "none";
     enterBtn.textContent = "이어서 시작하기";
   } else {
     welcomeBackBox.style.display = "none";
     newUserFields.style.display = "block";
-    enterBtn.textContent = "프로필 완성 · 식물 MBTI 하러 가기";
+    document.getElementById("obProgress").style.display = "";
+    enterBtn.textContent = "다음";
   }
 }
 
@@ -102,16 +116,31 @@ enterBtn.addEventListener("click", () => {
     return;
   }
 
-  // 새 유저: 프로필을 다 입력해야 시작할 수 있어요
+  // 새 유저: 1단계 칸을 다 채우면 2단계로
   const age = document.getElementById("ageInput").value.trim();
-  const snackInput = document.getElementById("snackInput");
-  const snack = snackInput.value.trim();
-  if (!age || !selectedGender || !snack) {
-    showAlert("나이, 성별, 사용할 과자봉지을 모두 입력해야\n식물 MBTI를 시작할 수 있어요!", { title: "아직 빈 칸이 있어요" });
+  if (!age || !selectedGender) {
+    showAlert("나이와 성별을 입력해주세요!", { title: "아직 빈 칸이 있어요" });
     return;
   }
-  if (!checkKindWords(snack)) {
+  showObStep(2);
+});
+
+document.getElementById("step2Next").addEventListener("click", () => showObStep(3));
+
+// 3단계: 과자봉지 고르기 (이미지 + 직접 입력)
+const snackInput = document.getElementById("snackInput");
+setupSnackPicker(document.getElementById("snackGrid"), snackInput, "", (name) => (selectedSnack = name));
+
+document.getElementById("finishBtn").addEventListener("click", () => {
+  const nickname = nicknameInput.value.trim();
+  const age = document.getElementById("ageInput").value.trim();
+  if (!selectedSnack) {
+    showAlert("식물을 키울 과자봉지를 골라주세요!\n목록에 없으면 '다른 과자'를 눌러 적어주세요.", { title: "과자봉지를 골라주세요" });
+    return;
+  }
+  if (!checkKindWords(selectedSnack)) {
     snackInput.value = "";
+    selectedSnack = "";
     return;
   }
   loginWithNickname(nickname, {
@@ -120,7 +149,7 @@ enterBtn.addEventListener("click", () => {
     gender: selectedGender,
     moodId: selectedMoodId,
     moodIntensity: moodIntensity.value,
-    snackName: snack,
+    snackName: selectedSnack,
   });
   window.location.href = "profile.html";
 });

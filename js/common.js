@@ -76,7 +76,7 @@ function logoutUser() {
 // 로그아웃 확인 후 첫 화면으로 (정보는 그대로 저장돼서 같은 이름으로 다시 들어오면 이어져요)
 function confirmLogout() {
   showConfirm(
-    "지금까지의 정보는 그대로 저장돼요.\n같은 이름으로 다시 들어오면 이어서 할 수 있어요.",
+    "지금까지의 정보는 이 폰에 그대로 저장돼요.\n이 폰에서 같은 이름으로 다시 들어오면 이어서 할 수 있어요.\n(다른 폰에서는 이어지지 않아요)",
     {
       title: "로그아웃할까요?",
       okText: "로그아웃",
@@ -171,9 +171,9 @@ function splitLetters(text, start) {
     .join("");
 }
 
-const SPLASH_MS = 4500;
+const SPLASH_MS = 3000;
 
-// 4.5초: 캐릭터 톡 → "나를 살리는 식물" 한 글자씩 → RE100:SMART 가 오른쪽에서 천천히 쓰윽 (3.4초쯤 도착) → 사라짐
+// 3초: 캐릭터 톡 → "나를 살리는 식물" 한 글자씩 → RE100:SMART 가 오른쪽에서 쓰윽 (2.1초쯤 도착) → 사라짐
 // onDone 이 false 를 돌려주면 (다른 화면으로 이동하는 경우) 화면을 그대로 둬요
 function renderSplash(onDone) {
   const el = document.createElement("div");
@@ -212,13 +212,15 @@ function renderSplash(onDone) {
     ? Promise.all([document.fonts.load('900 38px "Pretendard"'), document.fonts.load('800 20px "Pretendard"')])
     : Promise.resolve();
   fontsReady.then(start, start);
-  setTimeout(start, 900);
+  setTimeout(start, 400);
 }
 
 // ---------------------------------------------------------------------
 // 고운 말 필터 - 욕이 들어있으면 입력하지 않은 것으로 처리해요
 // ---------------------------------------------------------------------
-const BAD_WORDS = ["바보", "멍청이", "개새끼", "시발", "병신", "병식", "꺼져", "장애인", "좆"];
+const BAD_WORDS = [
+  "바보", "멍청이", "개새끼", "시발", "씨발", "시발론", "시발새끼", "시발년", "병신", "병식", "꺼져", "좆",
+];
 
 function containsBadWord(text) {
   const compact = String(text || "").replace(/[\s.\-_~!?·,]/g, "");
@@ -235,6 +237,28 @@ function checkKindWords(...texts) {
     return false;
   }
   return true;
+}
+
+// ---------------------------------------------------------------------
+// 위기 신호 - 새싹톡·소통방 공통. 욕 필터보다 먼저 확인해요
+// ---------------------------------------------------------------------
+// 어떤 상황이든 바로 109 안내
+const CRISIS_KEYWORDS = [
+  "죽고싶", "자살", "사라지고싶", "끝내고싶", "살기싫", "자해", "뛰어내리", "뛰어내릴", "다끝났", "다끝이야",
+];
+// 식물 얘기에도 나오는 말 - 식물이 아픈 얘기가 아닐 때만 위기로 봐요 ("바질이 죽어가요")
+const CRISIS_SOFT_KEYWORDS = ["죽어", "죽을까", "죽겠"];
+// 식물 얘기인지 알아보는 말
+const PLANT_TALK_WORDS = [
+  "바질", "민트", "상추", "로메인", "청경채", "식물", "화분", "새싹", "잎", "줄기", "뿌리", "씨앗", "작물", "꽃", "모종",
+];
+const CRISIS_HELP_TEXT = "자살 예방 상담전화는 언제나 109로 연결돼요 💛";
+
+function isCrisis(text) {
+  const t = String(text || "").replace(/\s/g, "");
+  const hit = (words) => words.some((w) => t.includes(w));
+  if (hit(CRISIS_KEYWORDS)) return true;
+  return hit(CRISIS_SOFT_KEYWORDS) && !hit(PLANT_TALK_WORDS);
 }
 
 // 내 식물 부르는 이름 (예: 씩씩이) - 없으면 작물 이름
@@ -259,6 +283,9 @@ function formatProfileLine(p) {
     .join("/");
 }
 
+// 진짜 사람이 아닌 예시 친구라는 표시 (소통방·새싹톡 공통)
+const AI_BADGE = '<span class="ai-badge">AI 친구</span>';
+
 // 소통방·새싹톡에 등장하는 또래 친구들 (프로토타입용 가상 유저)
 const VIRTUAL_FRIENDS = {
   haneul: { name: "김하늘", age: 18, gender: "여", snackName: "양파링", plantId: "basil", plantNickname: "바질라", moodId: "happy" },
@@ -280,7 +307,7 @@ const PLANTS = {
     emoji: "🥬",
     type: "무한긍정 쑥쑥형",
     desc: "쑥쑥 잘 자라는 강인한 생명력의 소유자. 초보 식집사에게 추천!",
-    recipeTitle: "청상추 두부쌈 다이어트 플레이트",
+    recipeTitle: "청상추 두부쌈 건강 플레이트",
     recipe: [
       "청상추를 깨끗이 씻어 물기를 뺀다.",
       "두부를 도톰하게 썰어 에어프라이어에 노릇하게 굽는다.",
@@ -359,6 +386,173 @@ const PLANTS = {
     ],
   },
 };
+
+// ---------------------------------------------------------------------
+// 식물 MBTI 결과 - 내 식물 특징 · 효능 (결과 바로 아래 · 내 프로필에서 다시 보기)
+// features: 특징 / effects: 효능 / notes: 꼭 알아두기
+// ---------------------------------------------------------------------
+const VITAMIN_A = "비타민A(지용성 비타민, 체내에서 비타민A로 전환하는 베타카로틴) 함유";
+const VITAMIN_C = "비타민C(수용성 비타민, 아스코르브산) 함유";
+const VITAMIN_K = "비타민K1(지용성 비타민, 필로퀴논) 함유";
+const WARFARIN_NOTE =
+  "비타민 K는 와파린의 약효에 영향을 줄 수 있어요. 와파린 등 항응고제를 복용하는 사람은 섭취량을 일정하게 유지하고, 식습관을 크게 바꾸기 전 의료진과 상담하세요.";
+
+const PLANT_TRAITS = {
+  cheongSangchu: {
+    features: ["잎이 연둣빛을 띠며 쓴맛이 적음", "수분함량 높음(90% 이상)", VITAMIN_A, VITAMIN_C, VITAMIN_K, "식이섬유 함유"],
+    effects: ["시각 기능 유지(A)", "수분 공급", "배변 활동에 도움", "항산화 작용(C)", "콜라겐 합성 및 철분 흡수(C)", "뼈 건강 유지(K)"],
+    notes: [
+      "청상추에는 클로로필이라는 녹색을 나타내는 색소가 들어있으나, 아직 사람에게 나타나는 특정 건강 효능은 충분히 입증되지 않았어요.",
+      WARFARIN_NOTE,
+    ],
+  },
+  jeokSangchu: {
+    features: [
+      "잎의 끝이 붉거나 보라색을 띰",
+      "안토시아닌(pH농도에 따라 붉은색, 푸른색, 보라색을 띠는 천연 색소) 풍부",
+      VITAMIN_A, VITAMIN_C, VITAMIN_K, "식이섬유 함유",
+    ],
+    effects: ["시각 기능 유지(A)", "배변 활동에 도움", "항산화 작용(C)", "콜라겐 합성 및 철분 흡수(C)", "뼈 건강 유지(K)"],
+    notes: ["청상추와 다른 점은 잎의 색을 나타내는 주요 색소와 색깔이에요.", WARFARIN_NOTE],
+  },
+  romaine: {
+    features: [
+      "잎이 위로 차곡차곡 겹쳐 자라는 반결구형",
+      "잎이 길쭉하고 가운데 심 부분이 두껍게 발달",
+      "쓴맛이 적고 은은한 단맛과 고소한 맛이 남",
+      VITAMIN_A, VITAMIN_C, VITAMIN_K, "엽산 함유", "식이섬유 함유",
+    ],
+    effects: [
+      "시각 기능과 면역 기능 유지(A)", "항산화 작용(C)", "콜라겐 합성 및 철분 흡수(C)", "뼈 건강(K)",
+      "DNA 합성과 세포 분열에 필요(엽산)", "배변 활동에 도움",
+    ],
+    notes: [WARFARIN_NOTE],
+  },
+  cheonggyeongchae: {
+    features: [
+      "십자화과에 속하는 잎채소",
+      "맛이 비교적 담백하고 잎자루에 수분이 많아 아삭한 식감",
+      "식이섬유 함유", VITAMIN_A, VITAMIN_C, VITAMIN_K, "칼슘 함유",
+    ],
+    effects: [
+      "시각 기능과 면역 기능 유지(A)", "항산화 작용(C)", "콜라겐 합성 및 철분 흡수(C)", "뼈 건강(K)",
+      "뼈와 치아 구성 및 근육 수축과 정상적인 신경 기능(칼슘)", "배변 활동에 도움",
+    ],
+    notes: [
+      "청경채는 고이트로젠 작용과 관련된 물질을 함유해요. 특정 조건에서 갑상선의 요오드 이용에 영향을 줄 가능성이 있어서, 갑상선에 문제가 있다면 생청경채를 매우 많이 장기간 먹는 식습관은 의료진과 상담하는 것이 좋아요.",
+      WARFARIN_NOTE,
+    ],
+  },
+  basil: {
+    features: [
+      "꿀풀과에 속하는 허브 식물",
+      "녹색이며 부드럽고 독특한 향",
+      "유제놀, 리날룰 등 여러 향기 성분 포함",
+      VITAMIN_A, VITAMIN_C, VITAMIN_K,
+    ],
+    effects: ["시각 기능과 면역 기능 유지(A)", "항산화 작용(C)", "콜라겐 합성 및 철분 흡수(C)", "뼈 건강(K)"],
+    notes: [
+      "유제놀, 리날룰은 바질의 향을 구성하는 성분으로, 일반적인 바질 섭취로 기대할 수 있는 특정 건강 효과는 충분히 입증되지 않았어요.",
+      WARFARIN_NOTE,
+    ],
+  },
+  mint: {
+    features: [
+      "꿀풀과에 속하는 허브 식물",
+      "가장자리에 톱니 모양이 있고 특유의 향을 지님",
+      "멘톨 함유",
+      "멘톤 함유(페퍼민트의 정유에 포함되는 향기 성분. 민트의 향과 풍미 형성에 관여)",
+      VITAMIN_A, VITAMIN_C, VITAMIN_K,
+    ],
+    effects: [
+      "피부와 입안의 냉감 수용체를 자극해 온도가 내려가지 않아도 시원하게 느끼게 함(멘톨)",
+      "시각 기능과 면역 기능 유지(A)", "항산화 작용(C)", "콜라겐 합성 및 철분 흡수(C)", "뼈 건강(K)",
+    ],
+    notes: [WARFARIN_NOTE],
+  },
+};
+
+// 한 줄 읽기 편하게: 괄호 속 긴 설명은 아랫줄 작은 글씨로, 짧은 괄호(A·C·K·엽산 등)는 꼬리표로
+// 예) "비타민C(수용성 비타민, 아스코르브산) 함유" → 비타민C 함유 / 수용성 비타민, 아스코르브산
+//     "항산화 작용(C)" → 항산화 작용 [C]
+function formatTraitItem(text) {
+  const m = text.match(/^(.*?)\(([^()]*)\)(.*)$/);
+  if (!m) return "<b>" + text + "</b>";
+  const main = (m[1] + m[3]).trim();
+  const inner = m[2];
+  // (A)·(C)·(K) 처럼 영어 한 글자만 있으면 무슨 뜻인지 모르니 "비타민A"로 풀어 써요
+  if (/^[A-Z]$/.test(inner)) return "<b>" + main + '</b> <span class="tr-tag">비타민' + inner + "</span>";
+  if (inner.length <= 3) return "<b>" + main + '</b> <span class="tr-tag">' + inner + "</span>";
+  return "<b>" + main + '</b><span class="tr-sub">' + inner + "</span>";
+}
+
+// 내 식물 특징 · 효능 · 꼭 알아두기 (HTML)
+function renderPlantTraits(plantId) {
+  const t = PLANT_TRAITS[plantId] || PLANT_TRAITS.basil;
+  const list = (items, plain) =>
+    "<ul>" + items.map((s) => "<li>" + (plain ? s : formatTraitItem(s)) + "</li>").join("") + "</ul>";
+  return (
+    '<div class="trait-box">' +
+    '<div class="trait-sec"><h3>🌱 특징</h3>' + list(t.features) + "</div>" +
+    '<div class="trait-sec"><h3>💪 효능</h3>' + list(t.effects) + "</div>" +
+    '<div class="trait-sec note"><h3>⚠️ 꼭 알아두기</h3>' + list(t.notes, true) + "</div>" +
+    "</div>"
+  );
+}
+
+// ---------------------------------------------------------------------
+// 과자봉지 고르기 - 이미지로 고르고, 목록에 없으면 직접 입력
+// container: 그리드를 그릴 곳 / otherInput: 직접 입력 칸 / onChange(이름)
+// ---------------------------------------------------------------------
+function setupSnackPicker(container, otherInput, initialName, onChange) {
+  const ids = Object.keys(SNACK_CHARS);
+  let picked = initialName || "";
+  const isListed = (name) => ids.some((id) => SNACK_CHARS[id].name === name);
+  const otherBox = otherInput.closest(".snack-other");
+
+  function render() {
+    const other = container.dataset.other === "1" || (!!picked && !isListed(picked));
+    container.innerHTML =
+      ids
+        .map((id) => {
+          const name = SNACK_CHARS[id].name;
+          return (
+            '<button type="button" class="snack-opt' + (!other && picked === name ? " on" : "") + '" data-name="' + name +
+            '" style="--bg:' + SNACK_CHARS[id].color + '"><img src="images/chars/' + id + '.webp" alt="" /><span>' + name + "</span></button>"
+          );
+        })
+        .join("") +
+      '<button type="button" class="snack-opt etc' + (other ? " on" : "") + '" data-name=""><span class="etc-ic">＋</span><span>다른 과자</span></button>';
+    otherBox.style.display = other ? "block" : "none";
+  }
+
+  container.addEventListener("click", (e) => {
+    const btn = e.target.closest(".snack-opt");
+    if (!btn) return;
+    if (btn.dataset.name) {
+      container.dataset.other = "";
+      picked = btn.dataset.name;
+      otherInput.value = "";
+    } else {
+      container.dataset.other = "1";
+      picked = otherInput.value.trim();
+      setTimeout(() => otherInput.focus(), 0);
+    }
+    render();
+    onChange(picked);
+  });
+  otherInput.addEventListener("input", () => {
+    picked = otherInput.value.trim();
+    onChange(picked);
+  });
+
+  if (picked && !isListed(picked)) {
+    container.dataset.other = "1";
+    otherInput.value = picked;
+  }
+  render();
+  onChange(picked);
+}
 
 // ---------------------------------------------------------------------
 // 내 식물 기록 - 작물별 수확 주기 (샐러드용 / 완전체 성장)
@@ -504,7 +698,20 @@ function escapeHtml(str) {
 
 // ---------------------------------------------------------------------
 // 포인트 시스템 공통 유틸
+// 받는 양: 꾸준히 하면 일주일에 약 900P (오늘의 질문 30P×7 + 사진 50P + 자격증 하루 최대 100P×7)
+// 쓰는 양: 방 꾸미기 200~450P (하루 이틀이면 하나) · 실물 1200~1500P (1~2주)
 // ---------------------------------------------------------------------
+const POINT_RULES = {
+  dailyAnswer: 30, // 오늘의 질문 첫 대답 (하루 1번)
+  weeklyPhoto: 50, // 식물 사진 새로 올릴 때마다 (주차마다 1번)
+  streakBonus: 500, // 한 주도 빠짐없이 완주
+};
+
+function todayKey() {
+  const d = new Date();
+  return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
+}
+
 function addPoints(amount) {
   const profile = loadProfile();
   if (!profile) return null;
@@ -544,10 +751,10 @@ const QUIZ_QUESTIONS = [
   { key: "red", text: "Q. 내 식물은 빨간색인가요?" },
 ];
 
-// 8문제 기준 포인트
+// 8문제 기준 포인트 (하루 첫 시험만 받아요)
 function scoreToPoints(correctCount) {
   if (correctCount >= 8) return 100;
-  if (correctCount >= 6) return 80;
+  if (correctCount >= 6) return 70;
   if (correctCount >= 3) return 40;
   if (correctCount >= 1) return 10;
   return 0;
@@ -573,12 +780,12 @@ function scoreToGrade(correctCount) {
 // goods: 실물 배송 아이템 (장바구니에 담기 - 구매는 준비중)
 // ---------------------------------------------------------------------
 const ROOM_ITEMS = [
-  { id: "leaf_roof", kind: "room", name: "잎사귀 대지붕", cost: 500, desc: "지붕 잎이 풍성해지고 꽃이 피어요" },
-  { id: "flower_blanket", kind: "room", name: "꽃무늬 흙이불", cost: 600, desc: "포근한 흙이불에 꽃 자수를 놓아요" },
-  { id: "firefly_lamp", kind: "room", name: "반딧불 무드등", cost: 700, desc: "잎 지붕에 반짝반짝 불빛이 켜져요" },
-  { id: "dew_mobile", kind: "room", name: "이슬방울 모빌", cost: 800, desc: "자는 동안 촉촉한 이슬을 내려줘요" },
-  { id: "butterfly", kind: "room", name: "나비 친구", cost: 900, desc: "식물 곁을 팔랑팔랑 지켜줘요" },
-  { id: "ceramic_pot", kind: "room", name: "도자기 화분집", cost: 1000, desc: "화분집을 반짝이는 민트 도자기로!" },
+  { id: "leaf_roof", kind: "room", name: "잎사귀 대지붕", cost: 200, desc: "지붕 잎이 풍성해지고 꽃이 피어요" },
+  { id: "flower_blanket", kind: "room", name: "꽃무늬 흙이불", cost: 250, desc: "포근한 흙이불에 꽃 자수를 놓아요" },
+  { id: "firefly_lamp", kind: "room", name: "반딧불 무드등", cost: 300, desc: "잎 지붕에 반짝반짝 불빛이 켜져요" },
+  { id: "dew_mobile", kind: "room", name: "이슬방울 모빌", cost: 350, desc: "자는 동안 촉촉한 이슬을 내려줘요" },
+  { id: "butterfly", kind: "room", name: "나비 친구", cost: 400, desc: "식물 곁을 팔랑팔랑 지켜줘요" },
+  { id: "ceramic_pot", kind: "room", name: "도자기 화분집", cost: 450, desc: "화분집을 반짝이는 민트 도자기로!" },
   { id: "real_nutrient", kind: "goods", name: "식물 영양제 (실물)", cost: 1200, desc: "진짜 영양제를 집으로 보내드려요" },
   { id: "real_seedkit", kind: "goods", name: "새 모종 · 씨앗 키트 (실물)", cost: 1500, desc: "다음 작물 씨앗과 흙을 보내드려요" },
 ];
@@ -795,8 +1002,8 @@ function formatChatTime(ts) {
 // href: 누르면 바로 가는 화면
 const HOME_NOTICES = [
   { title: "🌱 포대 농업 시작하기", desc: "과자봉지를 리싸이클해서 나만의 미니 스마트팜을 만들어보세요.", href: "myroom.html", cta: "식물의 방 가기" },
-  { title: "📸 내 식물 기록 챌린지", desc: "매주 화분 사진을 한 번도 빠짐없이 올리면 300P를 드려요!", href: "growth.html", cta: "기록하러 가기" },
-  { title: "🎓 식집사 자격증 응시", desc: "8문제로 내 식물을 얼마나 아는지 테스트하고 포인트를 받아보세요.", href: "certificate.html", cta: "시험 보러 가기" },
+  { title: "📸 내 식물 기록 챌린지", desc: "매주 사진을 올릴 때마다 50P, 한 번도 빠짐없이 올리면 500P를 더 드려요!", href: "growth.html", cta: "기록하러 가기" },
+  { title: "🎓 식집사 자격증 응시", desc: "8문제로 내 식물을 얼마나 아는지 테스트하고 하루 최대 100P를 받아보세요.", href: "certificate.html", cta: "시험 보러 가기" },
   { title: "🍘 과자 소통방 오픈", desc: "자갈치 · 감자깡 · 콘초 · 바나나킥 방이 새로 열렸어요.", href: "lounge.html", cta: "소통방 가기" },
 ];
 

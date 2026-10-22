@@ -1,5 +1,5 @@
 // ④ 식물의 방 - 화분이 집, 흙이 이불, 잎이 지붕! 내 작물 캐릭터가 그 안에서 쿨쿨 자요.
-// 위: 식물의 방 / 가운데: 오늘의 질문 / 아래: 500~1500P 상점 (꾸미기는 바로 구매, 실물은 장바구니)
+// 위: 식물의 방 / 가운데: 오늘의 질문 / 아래: 200~1500P 상점 (꾸미기는 바로 구매, 실물은 장바구니)
 
 requireProfile();
 renderTabbar("room");
@@ -114,11 +114,6 @@ const DAILY_QUESTIONS = [
   "내 {n}의 첫 수확을 누구랑 나눠 먹고 싶어?",
   "내 {n}에게 고마운 점 한 가지는?",
 ];
-
-function todayKey() {
-  const d = new Date();
-  return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
-}
 
 function getPoints() {
   const profile = loadProfile();
@@ -274,7 +269,7 @@ function renderQuestion() {
   view.textContent = answer ? "💬 " + answer : "";
   document.getElementById("answerInput").placeholder = answer
     ? "대답을 바꾸고 싶다면 다시 적어주세요"
-    : "내 " + call + "에게 대답해주세요 (오늘 첫 대답 +10P)";
+    : "내 " + call + "에게 대답해주세요 (오늘 첫 대답 +" + POINT_RULES.dailyAnswer + "P)";
 }
 
 document.getElementById("answerBtn").addEventListener("click", () => {
@@ -290,7 +285,7 @@ document.getElementById("answerBtn").addEventListener("click", () => {
   const first = !room.answers[todayKey()];
   room.answers[todayKey()] = text;
   saveMyRoom(room);
-  if (first) addPoints(10);
+  if (first) addPoints(POINT_RULES.dailyAnswer);
   input.value = "";
   refreshHeader();
   renderQuestion();
@@ -338,7 +333,7 @@ function renderShop() {
           renderShop();
           document.getElementById("plantRoom").scrollIntoView({ behavior: "smooth" });
         } else {
-          showAlert("필요: " + item.cost + "P / 보유: " + getPoints() + "P\n식물 기록과 자격증으로 포인트를 모아보세요 🌱", { type: "warn", title: "포인트가 부족해요" });
+          showAlert("필요: " + item.cost + "P / 보유: " + getPoints() + "P\n오늘의 질문 · 식물 사진 · 자격증으로 포인트를 모아보세요 🌱", { type: "warn", title: "포인트가 부족해요" });
         }
       });
     }

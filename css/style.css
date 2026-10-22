@@ -34,7 +34,13 @@ body {
   color: var(--text);
   display: flex;
   justify-content: center;
+  /* 한글 단어가 중간에 잘리지 않게 단어 단위로 줄바꿈 */
+  word-break: keep-all;
+  overflow-wrap: break-word;
 }
+
+/* 줄 끝에 한 글자만 남지 않게 문단 줄바꿈을 고르게 */
+p, li, .desc, .notice, .hint, .ob-safe, .ob-note, .device-notice, .ai-notice, .bubble, .rc-bubble { text-wrap: pretty; }
 
 .app {
   width: 100%;
@@ -142,24 +148,19 @@ input[type="range"] { accent-color: var(--green); }
 
 .chip.selected { color: #fff; border-color: transparent; }
 
-.mood-bar-wrap { margin-top: 10px; display: flex; align-items: center; gap: 10px; }
-
-.mood-bar-track {
-  flex: 1;
-  height: 14px;
-  border-radius: 999px;
-  background: #e6efe2;
-  overflow: hidden;
+/* 기분의 크기: 슬라이더 하나 + 이름표 */
+.mood-strength {
+  margin-top: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 13px;
+  color: #5c6b58;
 }
-
-.mood-bar-fill {
-  height: 100%;
-  width: 0%;
-  border-radius: 999px;
-  transition: width 0.2s ease, background 0.2s ease;
-}
-
-.mood-emoji { font-size: 22px; }
+.mood-strength b { font-size: 14px; color: var(--green-dark); }
+.mood-range { width: 100%; margin-top: 6px; }
+.mood-ends { display: flex; justify-content: space-between; font-size: 11px; color: #8a9586; }
 
 .btn {
   display: inline-block;
@@ -1321,6 +1322,65 @@ main.has-tabbar { padding-bottom: 96px; }
   width: fit-content;
 }
 
+.ai-badge {
+  display: inline-block;
+  vertical-align: middle;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  color: #5b4bb5;
+  background: #ece8ff;
+  border-radius: 999px;
+  padding: 3px 6px;
+}
+
+.ai-notice,
+.device-notice {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #5b4bb5;
+  background: #f3f0ff;
+  border: 1px solid #ddd5ff;
+  border-radius: 12px;
+  padding: 8px 12px;
+  margin: 0 auto 12px;
+  text-align: center;
+}
+
+.device-notice {
+  color: #6b5a2e;
+  background: #fff8e6;
+  border-color: #f1e2b3;
+  margin-top: 10px;
+}
+
+.rc-crisis {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: #b71c1c;
+  background: #ffebee;
+  border: 1px solid #ef9a9a;
+  border-radius: 14px;
+  padding: 10px 14px;
+  margin: 6px auto 12px;
+  max-width: 90%;
+}
+
+.rc-crisis a {
+  margin-top: 4px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: #d32f2f;
+  color: #fff;
+  text-decoration: none;
+  font-weight: 700;
+}
+
 .rc-row { display: flex; gap: 8px; margin: 10px 0; align-items: flex-start; }
 .rc-row.me { justify-content: flex-end; align-items: flex-end; }
 .rc-avatar { width: 40px; height: 40px; flex: 0 0 40px; border-radius: 15px; overflow: hidden; }
@@ -1439,6 +1499,85 @@ main.has-tabbar { padding-bottom: 96px; }
   text-align: center;
 }
 .onboard-welcome-back { text-align: center; line-height: 1.6; }
+
+/* 프로필 만들기 3단계 */
+.ob-progress { display: flex; align-items: center; gap: 6px; margin: -4px 0 14px; }
+.ob-progress .dot { width: 22px; height: 6px; border-radius: 999px; background: #e3ecdf; transition: background 0.2s ease; }
+.ob-progress .dot.on { background: var(--green); }
+.ob-progress em { font-style: normal; font-size: 12px; font-weight: 700; color: #6f7a6b; margin-left: 4px; }
+.ob-q { font-family: var(--cute); font-size: 19px; font-weight: 800; color: var(--green-deep); margin-bottom: 10px; }
+.ob-note { font-size: 12px; color: #7a8676; margin: 8px 0 12px; }
+.ob-nav { display: grid; grid-template-columns: 1fr 2.2fr; gap: 8px; margin-top: 14px; }
+.ob-nav .btn { padding: 13px 8px; font-size: 15px; }
+
+/* 과자봉지 고르기 */
+.snack-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 8px; }
+.snack-opt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 4px 7px;
+  border-radius: 16px;
+  border: 3px solid transparent;
+  background: var(--bg, #f4f8f1);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  color: #4d5a49;
+  cursor: pointer;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+.snack-opt img { width: 56px; height: 56px; object-fit: contain; }
+.snack-opt.on { border-color: var(--green); transform: translateY(-2px); box-shadow: 0 4px 10px rgba(80, 140, 80, 0.18); }
+.snack-opt.etc { background: #f4f6f2; }
+.snack-opt .etc-ic { width: 56px; height: 56px; display: grid; place-items: center; font-size: 26px; color: #8a9586; }
+.snack-other { margin-top: 10px; }
+
+/* 내 식물 특징 · 효능 */
+.trait-box { display: grid; gap: 10px; margin: 14px 0; text-align: left; }
+.trait-sec { background: var(--mint); border-radius: 14px; padding: 12px 14px; }
+.trait-sec h3 { margin: 0 0 6px; font-size: 14.5px; color: var(--green-deep); }
+.trait-sec ul { margin: 0; padding: 0; list-style: none; }
+.trait-sec li {
+  position: relative;
+  padding: 7px 0 7px 14px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: #33402f;
+  border-top: 1px dashed rgba(90, 130, 80, 0.18);
+}
+.trait-sec li:first-child { border-top: none; padding-top: 2px; }
+.trait-sec li::before { content: ""; position: absolute; left: 2px; top: 1.05em; width: 5px; height: 5px; border-radius: 50%; background: var(--green); }
+.trait-sec li:first-child::before { top: calc(1.05em - 5px); }
+.trait-sec li b { font-weight: 700; }
+.tr-sub { display: block; font-size: 12px; color: #7a8676; margin-top: 1px; }
+.tr-tag {
+  display: inline-block;
+  vertical-align: 1px;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--green-dark);
+  background: #fff;
+  border-radius: 6px;
+  padding: 1px 6px;
+}
+.trait-sec.note { background: #fff8e6; }
+.trait-sec.note h3 { color: #8a6a17; }
+.trait-sec.note li { font-size: 12.5px; color: #6b5a2e; line-height: 1.6; }
+.trait-sec.note li::before { background: #e0b84f; }
+.summary-traits { margin: 4px 0 12px; text-align: left; }
+.summary-traits summary {
+  cursor: pointer;
+  font-weight: 800;
+  color: var(--green-dark);
+  background: var(--green-soft);
+  border-radius: 14px;
+  padding: 11px 14px;
+  list-style-position: inside;
+}
+.summary-traits .trait-box { margin-top: 10px; }
+.name-char { margin: 4px auto 10px; }
 
 /* ===================== 프로필 카드 · MBTI ===================== */
 .mp-line { font-size: 19px; font-weight: 800; color: var(--green-deep); margin: 8px 0 14px; letter-spacing: -0.03em; }
@@ -2037,17 +2176,17 @@ main.has-tabbar { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
 .big-logo .logo-text .logo-tag { margin: 0 0 1px; font-size: 11px; letter-spacing: -0.02em; color: #6aa84f; font-weight: 800; }
 .big-logo .logo-text strong { gap: 0; font-size: 25px; font-weight: 900; letter-spacing: -0.03em; }
 
-/* 로딩 화면 애니메이션 (4.5초) */
-.splash-mark { animation: mark-pop 0.8s cubic-bezier(0.3, 1.6, 0.5, 1) both, mark-wiggle 1.2s ease-in-out 3.2s 1; }
+/* 로딩 화면 애니메이션 (3초) */
+.splash-mark { animation: mark-pop 0.6s cubic-bezier(0.3, 1.6, 0.5, 1) both, mark-wiggle 0.8s ease-in-out 2s 1; }
 .splash .sl { display: inline-block; opacity: 0; }
-.splash-tag .sl { animation: tag-in 0.6s ease both; animation-delay: calc(0.3s + var(--i) * 0.07s); }
+.splash-tag .sl { animation: tag-in 0.45s ease both; animation-delay: calc(0.2s + var(--i) * 0.05s); }
 /* RE100:SMART 가 한꺼번에 오른쪽에서 천천히 쓰윽 */
 .splash-word { overflow: hidden; padding-right: 2px; }
 .splash-word .sl { opacity: 1; }
 .splash-word .sw-re, .splash-word .sw-smart {
   display: inline-block;
   opacity: 0;
-  animation: slide-in 2.3s cubic-bezier(0.25, 0.7, 0.25, 1) 1.1s both;
+  animation: slide-in 1.4s cubic-bezier(0.25, 0.7, 0.25, 1) 0.7s both;
 }
 @keyframes mark-pop {
   0% { opacity: 0; transform: scale(0.3) rotate(-20deg); }

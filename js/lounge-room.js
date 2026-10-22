@@ -10,7 +10,7 @@ const room = rooms.find((r) => r.id === roomId) || { id: roomId, name: "소통�
 const hostId = SNACK_CHARS[room.charId] ? room.charId : "yangparing";
 
 document.getElementById("roomTitle").textContent = room.name;
-document.getElementById("roomMembers").textContent = room.members || 1;
+document.getElementById("roomMembers").textContent = (room.builtin ? "AI 친구 " : "") + (room.members || 1);
 document.getElementById("stageName").textContent = SNACK_CHARS[hostId].name + " 방";
 document.title = "RE100:SMART | " + room.name;
 document.getElementById("roomChat").style.setProperty("--room-color", SNACK_CHARS[hostId].color);
@@ -28,11 +28,18 @@ let messages = loadLoungeMessages(roomId);
 
 function renderMessages() {
   chatWindow.innerHTML =
-    '<div class="rc-notice">' + escapeHtml(room.name) + "에 오신 걸 환영해요! 프로필을 누르면 친구 정보를 볼 수 있어요 🌱</div>";
+    '<div class="rc-notice">' + escapeHtml(room.name) + "에 오신 걸 환영해요! 프로필을 누르면 친구 정보를 볼 수 있어요 🌱</div>" +
+    '<div class="ai-notice">🤖 이 방의 친구들은 미리 만들어둔 <b>예시(AI) 친구</b>예요. 진짜 사람이 아니에요.<br />' +
+    "내 나이·성별 같은 정보는 이 방에 나오지 않아요.</div>";
   messages.forEach((m) => {
     const row = document.createElement("div");
     const time = '<span class="rc-time">' + formatChatTime(m.at) + "</span>";
-    if (m.me) {
+    if (m.crisis) {
+      row.className = "rc-crisis";
+      row.innerHTML =
+        "<b>📞 혼자 견디지 않아도 돼요</b>" + escapeHtml(CRISIS_HELP_TEXT) +
+        '<a href="tel:109">109 전화하기</a>';
+    } else if (m.me) {
       row.className = "rc-row me";
       row.innerHTML = time + '<div class="rc-bubble">' + escapeHtml(m.text) + "</div>";
     } else {
@@ -41,7 +48,7 @@ function renderMessages() {
       row.innerHTML =
         '<button class="rc-avatar" data-user="' + (m.user || "haneul") + '" aria-label="' + friend.name + ' 프로필">' +
         getCharacterSvg(friend.plantId) + "</button>" +
-        '<div class="rc-col"><span class="rc-name">' + friend.name +
+        '<div class="rc-col"><span class="rc-name">' + friend.name + " " + AI_BADGE +
         ' <small>' + escapeHtml(formatProfileLine(friend).split("/").slice(1).join("/")) + "</small></span>" +
         '<div class="rc-line"><div class="rc-bubble">' + escapeHtml(m.text) + "</div>" + time + "</div></div>";
     }
@@ -59,7 +66,7 @@ chatWindow.addEventListener("click", (e) => {
   if (!f) return;
   const mood = MOODS.find((m) => m.id === f.moodId) || MOODS[0];
   document.getElementById("pmChar").innerHTML = getCharacterSvg(f.plantId);
-  document.getElementById("pmName").textContent = f.name;
+  document.getElementById("pmName").innerHTML = escapeHtml(f.name) + " " + AI_BADGE;
   document.getElementById("pmLine").textContent = formatProfileLine(f);
   document.getElementById("pmMood").textContent = "오늘 상태 " + mood.emoji + " " + mood.label;
   document.getElementById("profileModal").classList.add("open");
@@ -79,6 +86,13 @@ function pushMessage(msg) {
 function handleSend() {
   const text = chatInput.value.trim();
   if (!text) return;
+  // 위기 신호는 욕 필터보다 먼저 - 욕이 섞여 있어도 109 안내가 나가요
+  if (isCrisis(text)) {
+    pushMessage({ me: true, text: text });
+    chatInput.value = "";
+    replyCrisis();
+    return;
+  }
   // 나쁜 말이 있으면 보내지 않아요
   if (!checkKindWords(text)) {
     chatInput.value = "";
@@ -87,6 +101,17 @@ function handleSend() {
   pushMessage({ me: true, text: text });
   chatInput.value = "";
   replyTo(text);
+}
+
+// 죽음·자살 얘기 → 109 안내 카드 + 친구들이 곁에 있어줘요
+function replyCrisis() {
+  setTimeout(() => pushMessage({ crisis: true }), 400);
+  const user = pickFriend();
+  say(user, pick([
+    myName + "님… 그런 마음이 들 만큼 힘들었구나요. 여기 다 같이 있어요 🫂",
+    "말해줘서 정말 고마워요 " + myName + "님. 혼자 견디지 마요, 109에 전화하면 바로 이야기 들어줘요 💛",
+  ]), 1200);
+  say(pickFriend([user]), pick(["무슨 일 있었는지 천천히 얘기해줘요. 들을게요", myName + "님 곁에 있을게요 💚"]), 1300);
 }
 
 // ---------------------------------------------------------------------

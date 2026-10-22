@@ -78,7 +78,7 @@ const ICON_GLYPHS = {
     '<circle cx="24" cy="28" r="6.5" fill="#ffd96b"/>' +
     '<path d="M24 24.5 L25.2 27 L27.8 27.3 L25.9 29.1 L26.4 31.7 L24 30.4 L21.6 31.7 L22.1 29.1 L20.2 27.3 L22.8 27 Z" fill="#fff"/>'],
 
-  // 다이어트 레시피 (그릇)
+  // 건강 레시피 (그릇)
   recipe: ["green",
     '<path d="M17 20 C15 14 19 10 23 12 C24 8 30 8 31 13 C35 12 37 17 33 20 Z" fill="#c8efc4"/>' +
     '<path d="M18 19 C20 14 25 14 26 18" stroke="#6cbf6a" stroke-width="2" fill="none" stroke-linecap="round"/>' +
@@ -242,7 +242,7 @@ const MENU_ART = {
     '<path d="M84 14 C80 6 86 2 92 4 C92 10 88 14 84 14Z" fill="#6cbf6a"/><path d="M84 14 C90 12 96 16 96 22 C90 22 86 18 84 14Z" fill="#8fd19e"/>' +
     '<path d="M60 40 L57 38 L58 43Z" fill="#3f4a3c"/>',
 
-  // 다이어트 레시피: 왼쪽은 옆으로 넓은 상추, 오른쪽은 홀쭉한 상추
+  // 건강 레시피: 왼쪽은 옆으로 넓은 상추, 오른쪽은 홀쭉한 상추
   recipe: () =>
     artBg("#fdebd8") +
     '<ellipse cx="50" cy="90" rx="44" ry="5" fill="#f3d3b3"/>' +
