@@ -1956,6 +1956,11 @@ button.char-tile { font-family: inherit; color: var(--text); width: 100%; }
 .room-chat .rc-stage { height: 64px; }
 /* 입력창 줄은 흰 바탕 없이 (입력칸 · 전송 버튼만 하얗게) */
 .chat-input-row.rc-input { background: transparent; box-shadow: none; }
+/* 방 테마색 계열: 전송 버튼은 진하게(흰 글씨), 내 말풍선은 연하게 */
+.chat-input-row.rc-input button { background: var(--room-badge, var(--green)); color: #fff; }
+.chat-input-row.rc-input textarea { border-color: var(--room-light, var(--green-soft)); }
+.chat-input-row.rc-input textarea:focus { border-color: var(--room-badge, var(--green)); }
+.room-chat .rc-row.me .rc-bubble { background: var(--room-light, #c8efc4); color: #2b2b2b; }
 /* 빼꼼하는 식물은 입력칸 윗선에서 잘려 보여요 */
 .rc-peekers {
   position: fixed;

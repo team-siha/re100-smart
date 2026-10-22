@@ -28,7 +28,14 @@ function darken(hex, amount) {
   const ch = (shift) => Math.round(((n >> shift) & 255) * (1 - amount));
   return "rgb(" + ch(16) + "," + ch(8) + "," + ch(0) + ")";
 }
-document.body.style.setProperty("--room-badge", darken(SNACK_CHARS[hostId].bag, SNACK_CHARS[hostId].dark ? 0.35 : 0.45));
+document.body.style.setProperty("--room-badge", darken(SNACK_CHARS[hostId].bag, SNACK_CHARS[hostId].dark ? 0.35 : 0.27));
+// 내 말풍선: 테마색을 연하게 (흰색과 섞기)
+function lighten(hex, amount) {
+  const n = parseInt(hex.slice(1), 16);
+  const ch = (shift) => Math.round(((n >> shift) & 255) + (255 - ((n >> shift) & 255)) * amount);
+  return "rgb(" + ch(16) + "," + ch(8) + "," + ch(0) + ")";
+}
+document.body.style.setProperty("--room-light", lighten(SNACK_CHARS[hostId].bag, 0.72));
 roomChatEl.classList.toggle("dark-bag", !!SNACK_CHARS[hostId].dark);
 document.body.style.background = SNACK_CHARS[hostId].bag;
 
