@@ -25,24 +25,47 @@ roomChatEl.style.setProperty("--room-bag", SNACK_CHARS[hostId].bag);
 roomChatEl.classList.toggle("dark-bag", !!SNACK_CHARS[hostId].dark);
 document.body.style.background = SNACK_CHARS[hostId].bag;
 
-// 과자 캐릭터들이 뒤에 빼곡히 모여 응원해요 (방 주인 과자는 가운데 크게)
-const others = Object.keys(SNACK_CHARS).filter((id) => id !== hostId);
-const crowdIds = others.slice(0, 4).concat(hostId, others.slice(4));
-document.getElementById("crowd").innerHTML = crowdIds
-  .map((id, i) => '<span class="cw' + (id === hostId ? " host" : "") + '" style="--i:' + i + '">' + getSnackImg(id) + "</span>")
-  .join("");
+// 이 방 과자 캐릭터 하나만 크게(식물의 약 3배), 한 화면에 5개를 지그재그로
+const PATTERN_SPOTS = [
+  // [가로 %, 세로 %, 크기 px, 기울기 deg]
+  [18, 14, 150, -14],
+  [80, 33, 160, 12],
+  [22, 54, 150, 8],
+  [80, 74, 155, -10],
+  [26, 93, 150, -6],
+];
+document.getElementById("snackPattern").innerHTML = PATTERN_SPOTS.map(
+  ([x, y, size, rot], i) =>
+    '<span class="pt" style="left:' + x + "%;top:" + y + "%;width:" + size + "px;--r:" + rot + "deg;--d:" + i * -1.2 + 's">' +
+    getSnackImg(hostId) + "</span>"
+).join("");
 
-// 상추들이 손잡고 뛰어놀아요 (캐릭터 사이사이 맞잡은 손)
-const DANCERS = ["cheongSangchu", "basil", "jeokSangchu", "mint", "romaine"];
-document.getElementById("dance").innerHTML = DANCERS.map(
-  (id, i) =>
-    (i ? '<span class="hand" style="--i:' + i + '"></span>' : "") +
-    '<span class="dancer" style="--i:' + i + '"><img src="images/chars/' + id + '.webp" alt="" /></span>'
+// 식물 친구들이 입력창 뒤에서 하나둘씩 빼꼼 → 타이핑을 시작하면 쏙 숨어요
+const PEEKERS = [
+  // [식물, 가로 %, 기울기 deg]
+  ["cheongSangchu", 12, -8],
+  ["basil", 32, 6],
+  ["jeokSangchu", 52, -4],
+  ["mint", 72, 8],
+  ["romaine", 90, -6],
+];
+document.getElementById("peekers").innerHTML = PEEKERS.map(
+  ([id, x, rot], i) =>
+    '<span class="pk" style="left:' + x + "%;--r:" + rot + "deg;--d:" + i * 1.1 + 's"><img src="images/chars/' + id + '.webp" alt="" /></span>'
 ).join("");
 
 const chatWindow = document.getElementById("chatWindow");
 const chatInput = document.getElementById("chatInput");
 const sendBtn = document.getElementById("sendBtn");
+
+// 입력창을 누르거나 글을 쓰는 중이면 빼꼼하던 식물들이 숨어요
+function updateTyping() {
+  const typing = document.activeElement === chatInput || chatInput.value.trim() !== "";
+  document.body.classList.toggle("rc-typing", typing);
+}
+chatInput.addEventListener("focus", updateTyping);
+chatInput.addEventListener("blur", updateTyping);
+chatInput.addEventListener("input", updateTyping);
 
 let messages = loadLoungeMessages(roomId);
 

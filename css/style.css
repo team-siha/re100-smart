@@ -1912,10 +1912,11 @@ button.char-tile { font-family: inherit; color: var(--text); width: 100%; }
 /* 과자봉지 색 한 가지로만 꽉 채워요 (그라데이션 · 반투명 막 없음) */
 .room-chat { min-height: 100dvh; background: var(--room-bag, #3aa648); }
 .room-chat .rc-head { background: #fff; }
-.room-chat .rc-messages { background: var(--room-bag, #3aa648); background-image: none; }
+.room-chat .rc-messages { background: transparent; }
 .room-chat .rc-notice { background: #fff; color: #555; }
 .room-chat .rc-name { color: #2b2b2b; }
 .room-chat .rc-name small, .room-chat .rc-time { color: rgba(0, 0, 0, 0.6); }
+.room-chat .rc-name, .room-chat .rc-time { text-shadow: 0 0 3px var(--room-bag), 0 0 6px var(--room-bag); }
 .room-chat.dark-bag .rc-name { color: #fff; }
 .room-chat.dark-bag .rc-name small, .room-chat.dark-bag .rc-time { color: rgba(255, 255, 255, 0.85); }
 .rc-stage {
@@ -1925,60 +1926,64 @@ button.char-tile { font-family: inherit; color: var(--text); width: 100%; }
   overflow: hidden;
   background: transparent;
 }
-/* 과자 캐릭터들: 뒤에 빼곡히, 번갈아 흔들흔들 (방 주인은 가운데 크게) */
-.rc-crowd {
-  position: absolute;
-  left: -10px;
-  right: -10px;
-  top: 34px;
-  z-index: 1;
-  display: flex;
-  justify-content: center;
-  align-items: flex-end;
-}
-.rc-crowd .cw { width: 54px; margin: 0 -7px; animation: crowd-bob 1.6s ease-in-out infinite; animation-delay: calc(var(--i) * -0.35s); }
-.rc-crowd .cw:nth-child(odd) { margin-bottom: 14px; }
-.rc-crowd .cw.host { width: 82px; z-index: 2; margin-bottom: 0; }
-.rc-crowd .cw img { width: 100%; display: block; filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.18)); }
-@keyframes crowd-bob {
-  0%, 100% { transform: translateY(0) rotate(-5deg); }
-  50% { transform: translateY(-6px) rotate(5deg); }
-}
-/* 손잡은 상추들: 다 같이 좌우로 뛰어다니고, 하나씩 번갈아 통통 */
-.rc-dance {
-  position: absolute;
+/* 이 방 과자 캐릭터 패턴: 화면 전체에 고정, 천천히 둥실 (식물·대화 뒤) */
+.rc-pattern {
+  position: fixed;
+  top: 0;
+  bottom: 0;
   left: 50%;
-  bottom: 8px;
-  z-index: 3;
-  display: flex;
-  align-items: flex-end;
-  animation: dance-run 7s ease-in-out infinite;
+  width: 100%;
+  max-width: 480px;
+  transform: translateX(-50%);
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
 }
-.rc-dance .dancer { position: relative; z-index: 2; width: 50px; animation: dance-hop 0.8s ease-in-out infinite; animation-delay: calc(var(--i) * -0.4s); }
-.rc-dance .dancer img { width: 100%; display: block; filter: drop-shadow(0 4px 3px rgba(0, 0, 0, 0.15)); }
-.rc-dance .hand {
-  position: relative;
-  z-index: 1;
-  width: 26px;
-  height: 14px;
-  margin: 0 -9px 22px;
-  border-bottom: 4px solid #4f9d4f;
-  border-radius: 0 0 14px 14px;
-  animation: hand-swing 0.8s ease-in-out infinite;
-  animation-delay: calc(var(--i) * -0.4s);
+.rc-pattern .pt {
+  position: absolute;
+  transform: translate(-50%, -50%) rotate(var(--r));
+  animation: pattern-float 6s ease-in-out infinite;
+  animation-delay: var(--d);
 }
-@keyframes dance-run {
-  0%, 100% { transform: translateX(-62%); }
-  50% { transform: translateX(-38%); }
+.rc-pattern .pt img { width: 100%; display: block; }
+@keyframes pattern-float {
+  0%, 100% { transform: translate(-50%, -50%) rotate(var(--r)); }
+  50% { transform: translate(-50%, calc(-50% - 6px)) rotate(var(--r)); }
 }
-@keyframes dance-hop {
-  0%, 100% { transform: translateY(0) rotate(-5deg); }
-  50% { transform: translateY(-16px) rotate(5deg); }
+.room-chat .rc-stage, .room-chat .rc-messages { position: relative; z-index: 1; }
+/* 식물 친구들: 입력창 뒤에서 하나둘씩 빼꼼 (타이핑하면 쏙) */
+.room-chat .rc-stage { height: 64px; }
+.rc-peekers {
+  position: fixed;
+  left: 50%;
+  bottom: calc(62px + env(safe-area-inset-bottom));
+  width: 100%;
+  max-width: 480px;
+  height: 70px;
+  transform: translateX(-50%);
+  z-index: 39;
+  overflow: hidden;
+  pointer-events: none;
 }
-@keyframes hand-swing {
-  0%, 100% { transform: translateY(0) scaleY(1); }
-  50% { transform: translateY(-9px) scaleY(0.7); }
+.rc-peekers .pk {
+  position: absolute;
+  bottom: 0;
+  width: 58px;
+  margin-left: -29px;
+  transform: translateY(100%);
+  animation: plant-peek 6.5s ease-in-out infinite;
+  animation-delay: var(--d);
+  transition: transform 0.3s ease;
 }
+.rc-peekers .pk img { width: 100%; display: block; }
+@keyframes plant-peek {
+  0%, 8% { transform: translateY(100%) rotate(0); }
+  16% { transform: translateY(22%) rotate(var(--r)); }
+  24% { transform: translateY(26%) rotate(calc(var(--r) * -1)); }
+  32% { transform: translateY(22%) rotate(var(--r)); }
+  42%, 100% { transform: translateY(100%) rotate(0); }
+}
+body.rc-typing .rc-peekers .pk { animation: none; transform: translateY(100%); }
 .rc-stage-name {
   position: absolute;
   top: 10px;
