@@ -107,6 +107,9 @@ function handleSend() {
   pushMessage({ me: true, text: text });
   chatInput.value = "";
   replyTo(text);
+  if (grantReward("lounge-" + todayKey(), "소통방 인사하기", POINT_RULES.dailyLounge)) {
+    showRewardReady("소통방 인사하기", POINT_RULES.dailyLounge);
+  }
 }
 
 // 죽음·자살 얘기 → 109 안내 카드 + 친구들이 곁에 있어줘요

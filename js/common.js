@@ -730,7 +730,75 @@ const POINT_RULES = {
   dailyAnswer: 30, // 오늘의 질문 첫 대답 (하루 1번)
   weeklyPhoto: 50, // 식물 사진 새로 올릴 때마다 (주차마다 1번)
   streakBonus: 500, // 한 주도 빠짐없이 완주
+  dailyLounge: 10, // 소통방에 오늘 첫 인사
+  dailyChat: 10, // 새싹톡에 오늘 첫 이야기
 };
+
+// ---------------------------------------------------------------------
+// 미션 보상함 - 미션을 하면 보상이 쌓이고, '미션' 화면에서 [포인트 받기]를 눌러 받아요
+// pending: 아직 안 받은 보상 [{ id, label, amount }] / claimed: 이미 받은 보상 id
+// ---------------------------------------------------------------------
+const REWARD_KEY_PREFIX = "re100_rewards_";
+
+function loadRewards() {
+  const nickname = getCurrentNickname() || "guest";
+  try {
+    const r = JSON.parse(localStorage.getItem(REWARD_KEY_PREFIX + nickname) || "{}");
+    return { pending: r.pending || [], claimed: r.claimed || {} };
+  } catch (e) {
+    return { pending: [], claimed: {} };
+  }
+}
+
+function saveRewards(r) {
+  const nickname = getCurrentNickname() || "guest";
+  localStorage.setItem(REWARD_KEY_PREFIX + nickname, JSON.stringify(r));
+}
+
+// 보상 쌓기 (같은 id는 한 번만). 새로 쌓였으면 true
+function grantReward(id, label, amount) {
+  if (!amount) return false;
+  const r = loadRewards();
+  if (r.claimed[id] || r.pending.some((p) => p.id === id)) return false;
+  r.pending.push({ id, label, amount, at: Date.now() });
+  saveRewards(r);
+  return true;
+}
+
+function hasReward(id) {
+  const r = loadRewards();
+  return !!r.claimed[id] || r.pending.some((p) => p.id === id);
+}
+
+// 보상 받기 → 포인트에 더해요. 받은 포인트를 돌려줘요
+function claimReward(id) {
+  const r = loadRewards();
+  const item = r.pending.find((p) => p.id === id);
+  if (!item) return 0;
+  r.pending = r.pending.filter((p) => p.id !== id);
+  r.claimed[id] = true;
+  saveRewards(r);
+  addPoints(item.amount);
+  return item.amount;
+}
+
+// 보상이 쌓였을 때 위에서 살짝 내려오는 알림 (누르면 미션 화면으로)
+function showRewardReady(label, amount) {
+  const old = document.querySelector(".reward-toast");
+  if (old) old.remove();
+  const a = document.createElement("a");
+  a.className = "reward-toast";
+  a.href = "missions.html";
+  a.innerHTML =
+    '<span class="rt-gift">🎁</span><span><b>+' + amount + "P 보상 도착!</b><small>" + escapeHtml(label) +
+    " 완료 · 미션에서 받기</small></span><span class=\"rt-go\">→</span>";
+  document.body.appendChild(a);
+  requestAnimationFrame(() => a.classList.add("show"));
+  setTimeout(() => {
+    a.classList.remove("show");
+    setTimeout(() => a.remove(), 400);
+  }, 4500);
+}
 
 function todayKey() {
   const d = new Date();
@@ -822,6 +890,24 @@ const ROOM_ITEMS = [
   { id: "real_nutrient", kind: "goods", name: "식물 영양제 (실물)", cost: 1200, desc: "진짜 영양제를 집으로 보내드려요" },
   { id: "real_seedkit", kind: "goods", name: "새 모종 · 씨앗 키트 (실물)", cost: 1500, desc: "다음 작물 씨앗과 흙을 보내드려요" },
 ];
+
+// 내 방 "오늘의 질문" - 주체는 내 식물! (kind: 새싹톡 식물이 대답을 읽고 편지를 쓸 때 써요)
+const DAILY_QUESTIONS = [
+  { kind: "praise", text: "내 {n}에게 칭찬해줄 점은?" },
+  { kind: "morning", text: "아침에 눈을 뜨면 내 {n}에게 가장 먼저 해주고 싶은 말은?" },
+  { kind: "cute", text: "요즘 내 {n}의 모습 중 가장 귀여운 점은?" },
+  { kind: "song", text: "내 {n}에게 들려주고 싶은 노래 한 곡은?" },
+  { kind: "weather", text: "오늘 창밖 날씨를 내 {n}에게 한 단어로 알려준다면?" },
+  { kind: "share", text: "내 {n}의 첫 수확을 누구랑 나눠 먹고 싶어?" },
+  { kind: "thanks", text: "내 {n}에게 고마운 점 한 가지는?" },
+];
+
+// 날짜마다 정해진 질문 (date: Date, 없으면 오늘)
+function dailyQuestionIndex(date) {
+  const d = date || new Date();
+  const start = new Date(d.getFullYear(), 0, 0);
+  return Math.floor((d - start) / 86400000) % DAILY_QUESTIONS.length;
+}
 
 function loadMyRoom() {
   const nickname = getCurrentNickname() || "guest";

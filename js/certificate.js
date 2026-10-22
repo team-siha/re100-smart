@@ -166,7 +166,9 @@ function showQuizResult() {
     profile.quizRewardDay = todayKey();
     saveProfile(profile);
   }
-  if (points > 0) addPoints(points);
+  // 포인트는 미션 보상함에 쌓여요 → '미션'에서 [포인트 받기]
+  const label = "식집사 자격증 (" + correctCount + "/" + quiz.length + ")";
+  if (points > 0) grantReward("quiz-" + todayKey(), label, points);
   const grade = scoreToGrade(correctCount);
 
   document.getElementById("quizResult").innerHTML =
@@ -176,5 +178,10 @@ function showQuizResult() {
     '<div class="cert-grade">' + grade.grade + "</div>" +
     '<div class="cert-desc">' + correctCount + " / " + quiz.length + " 문제 정답! 내 <b>" + escapeHtml(getPlantCallName(profile)) +
     "</b> 기준으로 채점했어요.<br/>" +
-    (firstToday ? "획득 포인트: <b>" + points + "P</b>" : "오늘은 이미 포인트를 받았어요. 내일 또 도전해요!") + "</div>";
+    (!firstToday
+      ? "오늘은 이미 보상을 받았어요. 내일 또 도전해요!"
+      : points > 0
+        ? "보상 <b>+" + points + "P</b> 도착! 🎁 '미션'에서 [포인트 받기]를 눌러주세요"
+        : "아쉽게 보상은 없어요. 내일 또 도전해요!") + "</div>" +
+    (firstToday && points > 0 ? '<a class="btn" href="missions.html" style="margin-top:12px;">🎁 포인트 받으러 가기</a>' : "");
 }

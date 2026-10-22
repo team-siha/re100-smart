@@ -31,34 +31,21 @@
 <div class="app">
   <header class="topbar">
     <h1><span data-icon="mission" class="head-ic"></span>오늘의 미션</h1>
-    <p>보유 포인트 <b id="pointUtil">0P</b></p>
   </header>
   <main class="has-tabbar">
-    <div class="section-title">🌱 포인트 받으러 가기</div>
+    <!-- 보유 포인트 (보상을 받으면 여기로 쏙 쌓여요) -->
+    <div class="point-bank" id="pointBank">
+      <span class="pb-coin">🪙</span>
+      <div><small>보유 포인트</small><b id="pointUtil">0P</b></div>
+    </div>
 
-    <a class="mission-card" href="growth.html">
-      <div class="m-badge" data-icon="record"></div>
-      <div class="m-text"><strong>이번 주 내 식물 사진 올리기</strong><span>주마다 50P · 빠짐없이 올리면 500P 더, 성장 영상까지!</span></div>
-      <div class="m-point">+50P</div>
-    </a>
+    <!-- 받을 수 있는 보상 -->
+    <div class="section-title">🎁 받을 수 있는 보상 <button class="claim-all" id="claimAllBtn" type="button" style="display:none;">모두 받기</button></div>
+    <div id="rewardList"></div>
 
-    <a class="mission-card" href="certificate.html">
-      <div class="m-badge" data-icon="cert"></div>
-      <div class="m-text"><strong>식집사 자격증 응시하기</strong><span>8문제 중 맞춘 개수만큼 · 하루 한 번</span></div>
-      <div class="m-point">최대 +100P</div>
-    </a>
-
-    <a class="mission-card" href="lounge.html">
-      <div class="m-badge" data-icon="lounge"></div>
-      <div class="m-text"><strong>과자 소통방 인사하기</strong><span>외로운 마음을 나눠보세요</span></div>
-      <div class="m-point">마음+1</div>
-    </a>
-
-    <a class="mission-card" href="chat.html">
-      <div class="m-badge" data-icon="chat"></div>
-      <div class="m-text"><strong>내 식물에게 오늘 하루 말하기</strong><span>위로가 필요할 때 언제든</span></div>
-      <div class="m-point">마음+1</div>
-    </a>
+    <!-- 오늘의 미션 -->
+    <div class="section-title">🌱 오늘의 미션</div>
+    <div id="questList"></div>
 
     <div class="section-title">🛒 포인트 쓰러 가기</div>
     <a class="mission-card" href="myroom.html">

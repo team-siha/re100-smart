@@ -152,32 +152,51 @@ function renderWeeks(record) {
 }
 
 // ---------------- 사진 기록 포인트 ----------------
-// 사진을 올렸지만 아직 포인트를 안 받은 주차 (이 기능 전에 올린 사진 등)
-function unpaidWeeks(record) {
-  const paid = record.paidWeeks || {};
-  return Object.keys(record.photos).filter((w) => !paid[w]);
+// 사진을 올리면 미션 보상함에 쌓이고, 미션 화면이나 여기 [포인트 받기]로 받아요
+// paidWeeks: 보상을 이미 만든(또는 예전에 바로 받은) 주차
+function photoRewardPrefix(record) {
+  return "photo-" + record.startedAt + "-";
+}
+
+function givePhotoReward(record, week) {
+  record.paidWeeks = record.paidWeeks || {};
+  if (record.paidWeeks[week]) return false;
+  record.paidWeeks[week] = true;
+  return grantReward(photoRewardPrefix(record) + week, week + "주차 식물 사진 기록", POINT_RULES.weeklyPhoto);
+}
+
+// 보상 기능 전에 올린 사진도 보상함에 넣어줘요
+function syncPhotoRewards(record) {
+  let changed = false;
+  Object.keys(record.photos).forEach((w) => {
+    if (!(record.paidWeeks || {})[w]) {
+      givePhotoReward(record, w);
+      changed = true;
+    }
+  });
+  if (changed) saveRecord(record);
+}
+
+function pendingPhotoRewards(record) {
+  return loadRewards().pending.filter((p) => p.id.startsWith(photoRewardPrefix(record)));
 }
 
 function renderClaim(record) {
-  const profile = loadProfile();
-  document.getElementById("recPointNow").textContent = ((profile && profile.points) || 0) + "P";
-  const weeks = unpaidWeeks(record);
+  syncPhotoRewards(record);
+  document.getElementById("recPointNow").textContent = getMyPoints() + "P";
+  const items = pendingPhotoRewards(record);
   const btn = document.getElementById("claimBtn");
-  btn.style.display = weeks.length ? "inline-block" : "none";
-  btn.textContent = "🎁 사진 기록 포인트 " + weeks.length * POINT_RULES.weeklyPhoto + "P 받기";
+  btn.style.display = items.length ? "inline-block" : "none";
+  btn.textContent = "🎁 사진 기록 포인트 " + items.reduce((s, p) => s + p.amount, 0) + "P 받기";
 }
 
 document.getElementById("claimBtn").addEventListener("click", () => {
   const record = loadRecord();
-  const weeks = unpaidWeeks(record);
-  if (!weeks.length) return;
-  record.paidWeeks = record.paidWeeks || {};
-  weeks.forEach((w) => (record.paidWeeks[w] = true));
-  saveRecord(record);
-  const amount = weeks.length * POINT_RULES.weeklyPhoto;
-  addPoints(amount);
+  const items = pendingPhotoRewards(record);
+  if (!items.length) return;
+  const amount = items.reduce((s, p) => s + claimReward(p.id), 0);
   renderClaim(record);
-  showAlert(weeks.sort((a, b) => a - b).join(", ") + "주차 사진 기록 포인트예요!\n보유 포인트: " + getMyPoints() + "P", {
+  showAlert(items.map((p) => p.label).join("\n") + "\n\n보유 포인트: " + getMyPoints() + "P", {
     title: "+" + amount + "P 받았어요 🎉",
   });
 });
@@ -369,18 +388,15 @@ document.getElementById("photoInput").addEventListener("change", async (e) => {
     return;
   }
   record.photos[cur] = shot.dataUrl;
-  // 주차마다 처음 올릴 때 한 번만 포인트 (지웠다가 다시 올려도 또 받지 않게)
-  record.paidWeeks = record.paidWeeks || {};
-  const earn = !replacing && !record.paidWeeks[cur];
-  if (earn) record.paidWeeks[cur] = true;
+  // 주차마다 처음 올릴 때 한 번만 보상 (지웠다가 다시 올려도 또 받지 않게) → 보상함에 쌓여요
+  const earn = !replacing && givePhotoReward(record, cur);
   saveRecord(record);
-  if (earn) addPoints(POINT_RULES.weeklyPhoto);
   closeViewer();
   render();
   showAlert(
     cur + "주차 " + record.plantNickname + " 사진이 " + (replacing ? "바뀌었어요" : "기록됐어요") + "! 📸\n잎 색 " + Math.round(plantRatio * 100) + "% 확인 완료" +
-      (earn ? "\n\n보유 포인트: " + getMyPoints() + "P" : ""),
-    { title: earn ? "기록 완료 · +" + POINT_RULES.weeklyPhoto + "P 받았어요 🎉" : replacing ? "사진 수정 완료" : "기록 완료" }
+      (earn ? "\n\n🎁 +" + POINT_RULES.weeklyPhoto + "P 보상 도착!\n아래 [포인트 받기]나 '미션'에서 받아주세요" : ""),
+    { title: replacing ? "사진 수정 완료" : "기록 완료" }
   );
 });
 
@@ -480,13 +496,13 @@ function renderDone(record) {
   if (perfect && !record.rewarded) {
     record.rewarded = true;
     saveRecord(record);
-    addPoints(STREAK_REWARD);
+    grantReward("streak-" + record.startedAt, "식물 기록 완주 보너스", STREAK_REWARD);
     updateCartBadge();
   }
   document.getElementById("doneMsg").innerHTML =
     "<b>" + escapeHtml(profile.name) + "님의 식물이 이만큼 자랐어요! 뿌듯하죠?? 🌱</b><br />" +
     (perfect
-      ? "한 주도 빠짐없이 " + record.weeks + "주를 기록해서 <b>" + STREAK_REWARD + "P</b>를 받았어요 🎉"
+      ? "한 주도 빠짐없이 " + record.weeks + "주를 기록해서 <b>" + STREAK_REWARD + "P</b> 보상이 도착했어요 🎁 '미션'에서 받아주세요!"
       : record.weeks + "주 중 " + count + "주를 기록했어요. 다음엔 빠짐없이 도전해봐요!");
   document.getElementById("nextTitle").textContent = plantName + " 잘 키우셨네요!! 🎉";
   document.getElementById("saveVideoBtn").style.display = count && window.MediaRecorder ? "block" : "none";

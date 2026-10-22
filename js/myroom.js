@@ -104,17 +104,6 @@ const ITEM_ART = {
   real_seedkit: '<svg viewBox="0 0 60 60"><path d="M14 8 H46 V52 H14Z" fill="#ffd96b"/><path d="M14 8 L18 4 L22 8 L26 4 L30 8 L34 4 L38 8 L42 4 L46 8" fill="none" stroke="#ffd96b" stroke-width="2"/><circle cx="30" cy="28" r="11" fill="#fff"/><path d="M30 36 V26" stroke="#6cbf6a" stroke-width="2.4" stroke-linecap="round"/><path d="M30 29 C25 29 24 25 24.5 23 C28 23 30 25 30 29Z" fill="#8fd19e"/><path d="M30 27 C35 27 36 23 35.5 21 C32 21 30 23 30 27Z" fill="#7cc68a"/><rect x="20" y="42" width="20" height="4" rx="2" fill="#fff"/></svg>',
 };
 
-// 주체는 내 식물! "내 씩씩이에게 칭찬해줄 점은?"
-const DAILY_QUESTIONS = [
-  "내 {n}에게 칭찬해줄 점은?",
-  "아침에 눈을 뜨면 내 {n}에게 가장 먼저 해주고 싶은 말은?",
-  "요즘 내 {n}의 모습 중 가장 귀여운 점은?",
-  "내 {n}에게 들려주고 싶은 노래 한 곡은?",
-  "오늘 창밖 날씨를 내 {n}에게 한 단어로 알려준다면?",
-  "내 {n}의 첫 수확을 누구랑 나눠 먹고 싶어?",
-  "내 {n}에게 고마운 점 한 가지는?",
-];
-
 function getPoints() {
   const profile = loadProfile();
   return profile ? profile.points || 0 : 0;
@@ -259,9 +248,7 @@ document.getElementById("waterBtn").addEventListener("click", () => {
 function renderQuestion() {
   const room = loadMyRoom();
   const call = getPlantCallName(loadProfile());
-  const start = new Date(new Date().getFullYear(), 0, 0);
-  const dayOfYear = Math.floor((Date.now() - start) / 86400000);
-  document.getElementById("questionText").textContent = DAILY_QUESTIONS[dayOfYear % DAILY_QUESTIONS.length].replace("{n}", call);
+  document.getElementById("questionText").textContent = DAILY_QUESTIONS[dailyQuestionIndex()].text.replace("{n}", call);
 
   const answer = room.answers[todayKey()];
   const view = document.getElementById("answerView");
@@ -285,7 +272,9 @@ document.getElementById("answerBtn").addEventListener("click", () => {
   const first = !room.answers[todayKey()];
   room.answers[todayKey()] = text;
   saveMyRoom(room);
-  if (first) addPoints(POINT_RULES.dailyAnswer);
+  if (first && grantReward("answer-" + todayKey(), "오늘의 질문 대답", POINT_RULES.dailyAnswer)) {
+    showRewardReady("오늘의 질문 대답", POINT_RULES.dailyAnswer);
+  }
   input.value = "";
   refreshHeader();
   renderQuestion();

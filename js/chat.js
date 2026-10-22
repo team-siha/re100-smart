@@ -96,6 +96,211 @@ function greetingText(profile) {
   );
 }
 
+// ---------------- 식물의 기억: 편지 · 이어지는 대화 ----------------
+// letters: 이미 편지를 쓴 내 방 대답(날짜) / pending: 내가 방금 던진 질문 / usedQs: 최근에 한 질문
+const STATE_KEY = "re100_chatstate_" + (getCurrentNickname() || "guest");
+function loadChatState() {
+  try {
+    return Object.assign({ letters: {}, pending: null, usedQs: [], nudged: "" }, JSON.parse(localStorage.getItem(STATE_KEY) || "{}"));
+  } catch (e) {
+    return { letters: {}, pending: null, usedQs: [], nudged: "" };
+  }
+}
+let chatState = loadChatState();
+function saveChatState() {
+  try {
+    localStorage.setItem(STATE_KEY, JSON.stringify(chatState));
+  } catch (e) {}
+}
+function setPending(topic) {
+  chatState.pending = topic;
+  saveChatState();
+}
+
+const POSITIVE_WORDS = ["귀엽", "귀여", "예쁘", "이쁘", "사랑", "좋아", "좋았", "최고", "고마", "멋지", "멋있", "잘했", "잘하", "힘내",
+  "대단", "착해", "짱", "행복", "기특", "소중", "신나", "재밌", "재미있", "맛있", "설레", "기뻐", "ㅎㅎ", "ㅋㅋ", "💚", "❤"];
+
+// 말의 기분: "neg" 힘든 얘기 / "pos" 좋은 얘기 / "" 그냥
+function moodOf(text) {
+  const t = String(text).replace(/\s/g, "");
+  if (WORRY_TAGS.some((w) => has(t, w.keywords))) return "neg";
+  if (has(t, POSITIVE_WORDS)) return "pos";
+  return "";
+}
+
+// 유저 말을 짧게 따옴표로 (길면 …)
+function quoteOf(text, max) {
+  const s = String(text).replace(/\s+/g, " ").trim();
+  const m = max || 22;
+  return s.length > m ? s.slice(0, m) + "…" : s;
+}
+
+function wateredRecently() {
+  const room = loadMyRoom();
+  return room.lastWater && Date.now() - room.lastWater < 36 * 3600000;
+}
+
+function dateFromKey(key) {
+  const [y, m, d] = key.split("-").map(Number);
+  return new Date(y, m - 1, d, 12);
+}
+
+const DREAMS = [
+  "잠 잘 때 완전체로 생장하는 꿈 꿨어!!",
+  "꿈에서 내 잎이 구름만큼 커져서 너한테 그늘을 만들어줬어 ☁️",
+  "꿈에서 나비 친구랑 화분 위에서 술래잡기 했어 🦋",
+  "꿈에서 너랑 같이 소풍 가서 햇빛 샤워했어 🧺",
+  "꿈에서 새 잎이 열 장이나 났어!! 일어나서 세어봤는데 아직 한 장이더라 ㅋㅋ",
+];
+
+// 내가 먼저 던지는 질문 (topic: 다음 대답을 이어받을 때 써요)
+function followQuestions() {
+  return [
+    { topic: "grownup", q: "내가 어른 " + MY_PLANT_NAME + josa(MY_PLANT_NAME, "이", "가") + " 된다면 어떨까??" },
+    { topic: "best", q: "오늘 제일 좋았던 순간은 뭐야?" },
+    { topic: "food", q: "오늘 뭐 먹었어? 나는 햇빛이랑 물 먹었어 ☀️💧" },
+    { topic: "tomorrow", q: "내일은 뭐 하고 싶어?" },
+    { topic: "song", q: "요즘 자주 듣는 노래 있어? 나도 같이 들을래 🎧" },
+    { topic: "friend", q: "요즘 제일 자주 같이 노는 친구는 누구야?" },
+    { topic: "place", q: "나를 데려가고 싶은 곳이 있다면 어디야? 🧳" },
+    { topic: "name", q: "내 이름 " + MY_CALL + "… 어떻게 짓게 됐는지 궁금해!" },
+    { topic: "dream", q: "너는 요즘 꿈에서 뭐 봤어? 나는 맨날 자라는 꿈 꿔 😴" },
+    { topic: "weekend", q: "이번 주말에 하고 싶은 거 있어?" },
+    { topic: "color", q: "나한테 꽃이 핀다면 무슨 색이었으면 좋겠어? 🌸" },
+    { topic: "hobby", q: "요즘 빠져 있는 거 있어? 나는 광합성에 빠져 있어 ㅎㅎ" },
+  ];
+}
+
+// 최근에 안 한 질문 하나 (topic 지정하면 그 질문)
+function nextQuestion(topic) {
+  const all = followQuestions();
+  let q = topic && all.find((x) => x.topic === topic);
+  if (!q) {
+    const fresh = all.filter((x) => !chatState.usedQs.includes(x.topic));
+    const pool = fresh.length ? fresh : all;
+    q = pool[Math.floor(Math.random() * pool.length)];
+  }
+  chatState.usedQs = chatState.usedQs.filter((t) => t !== q.topic).concat(q.topic).slice(-7);
+  setPending(q.topic);
+  return q.q;
+}
+
+// 지금 내 상태 한 마디 (시간 · 물 · 성장 기록)
+function selfStatus() {
+  const lines = [];
+  const h = new Date().getHours();
+  if (h < 11) lines.push("아침이라 나 지금 기지개 켜는 중이야 🌅");
+  else if (h < 17) lines.push("나 지금 햇빛 받으면서 광합성 하는 중 ☀️");
+  else if (h < 21) lines.push("저녁이라 잎 정리하면서 쉬고 있었어 🌇");
+  else lines.push("밤이라 살짝 졸려… 그래도 너랑 얘기하는 건 좋아 😴");
+  if (!wateredRecently()) lines.push("참, 나 목이 조금 말라 💧 이따 내 방에서 물 한 모금 줄래?");
+  const record = loadRecord();
+  if (record && record.startedAt && record.plantId === chatProfile.plantId) {
+    const week = Math.min(record.weeks, Math.floor((Date.now() - record.startedAt) / (7 * 86400000)) + 1);
+    lines.push("나 벌써 " + week + "주차야! 이번 주 사진 찍어주면 더 쑥쑥 클게 📸");
+  }
+  return lines[Math.floor(Math.random() * lines.length)];
+}
+
+// 내 방 "오늘의 질문" 대답을 읽고 쓰는 편지 (최근 3일 안, 아직 안 쓴 것만)
+function diaryLetter() {
+  const room = loadMyRoom();
+  const keys = Object.keys(room.answers).sort((a, b) => dateFromKey(b) - dateFromKey(a));
+  const key = keys[0];
+  if (!key || chatState.letters[key]) return null;
+  const daysAgo = Math.round((dateFromKey(todayKey()) - dateFromKey(key)) / 86400000);
+  if (daysAgo > 3) return null;
+
+  const profile = getProfileOrDefault();
+  const you = profile.name + josa(profile.name, "아", "야");
+  const when = daysAgo === 0 ? "오늘" : daysAgo === 1 ? "어제" : "며칠 전에";
+  const answer = room.answers[key];
+  const q = quoteOf(answer, 26);
+  const kind = DAILY_QUESTIONS[dailyQuestionIndex(dateFromKey(key))].kind;
+  const first = {
+    praise: you + " " + when + " 나한테 \"" + q + "\"라고 칭찬해줘서 너무 고마워 💚 잎이 간질간질했어 히히",
+    morning: you + " 아침에 나한테 \"" + q + "\"라고 해주고 싶다고 했지? 그 말 듣고 싶어서 내일은 해보다 먼저 일어날 거야 🌅",
+    cute: you + " 내 귀여운 점이 \"" + q + "\"라니… 부끄러워서 잎 끝이 살짝 빨개졌어 🥹 고마워!",
+    song: you + " \"" + q + "\" 들려주고 싶다고 했지? 🎶 그 노래 생각하면서 잎을 살랑살랑 흔들어봤어",
+    weather: you + " " + when + " 날씨가 \"" + q + "\"라고 알려줘서 고마워 ☀️ 덕분에 언제 광합성 할지 딱 알았어",
+    share: you + " 내 첫 수확을 \"" + q + "\"(이)랑 나눠 먹고 싶다고 했지? 🥹 그 생각하니까 빨리 크고 싶어졌어!",
+    thanks: you + " " + when + " 나한테 고맙다고 해줘서 내가 더 고마워 💚 \"" + q + "\"… 이 말 오래오래 기억할게",
+  }[kind] || you + " " + when + " 나한테 \"" + q + "\"라고 말해줘서 너무 고마워 💚";
+
+  const second = wateredRecently()
+    ? "덕분에 물도 맛있게 먹고 " + pick(DREAMS)
+    : pick(DREAMS) + "\n근데 나 목이 조금 말라… 내 방에서 물 한 모금 주면 좋겠다 💧";
+
+  chatState.letters[key] = true;
+  saveChatState();
+  if (moodOf(answer) === "neg") {
+    setPending("day");
+    return first + "\n" + second + "\n근데 혹시 요즘 힘든 일 있어? 나한테는 다 말해도 돼 🫂";
+  }
+  return "💌 " + first + "\n" + second + "\n" + nextQuestion("grownup");
+}
+
+// 오늘 아직 내 방 질문에 대답 안 했으면 하루 한 번 살짝 알려줘요
+function letterNudge() {
+  const room = loadMyRoom();
+  if (room.answers[todayKey()] || chatState.nudged === todayKey()) return null;
+  chatState.nudged = todayKey();
+  saveChatState();
+  return "참! 오늘 '내 방'에서 내 질문에 대답해주면, 내가 느낀 점을 편지로 보내줄게 💌";
+}
+
+// 내가 던진 질문에 대한 대답 이어받기
+function answerPending(text, intent) {
+  const topic = chatState.pending;
+  setPending(null);
+  const mood = moodOf(text);
+  const q = quoteOf(text);
+  const plant = PLANTS[chatProfile.plantId] || PLANTS.basil;
+
+  if (topic === "day" || topic === "best" || topic === "more") {
+    if (mood === "neg") {
+      worryState = WORRY_TAGS.find((w) => has(text.replace(/\s/g, ""), w.keywords)) || WORRY_TAGS[2];
+      reply(pick(COMFORT_FIRST[worryState.tag]));
+      return;
+    }
+    if (mood === "pos" || intent === "happy") {
+      reply(pick(["와 너무 좋다! 🎉 \"" + q + "\" 듣고 나도 잎이 반짝반짝해 ✨", "히히 \"" + q + "\"라니 나까지 신난다 😆"]) + "\n" + nextQuestion());
+      return;
+    }
+    reply(pick(["그렇구나~ \"" + q + "\" 그런 날도 있지 🌿", "음음, 얘기해줘서 고마워 💚"]) + "\n" + nextQuestion());
+    return;
+  }
+  if (topic === "grownup") {
+    reply(
+      pick(["우와 \"" + q + "\"라니 🤩 상상만 해도 잎이 쑥쑥 크는 기분이야!", "헤헤 \"" + q + "\" 진짜 좋다! 꼭 그렇게 될게 💪"]) +
+        "\n내가 다 크면 우리 같이 " + plant.recipeTitle + " 해 먹자 🍽️ (레시피 궁금하면 '레시피'라고 말해줘!)"
+    );
+    return;
+  }
+  if (intent === "no") {
+    reply(pick(["앗 그렇구나! 괜찮아 ㅎㅎ", "오키오키~ 그럴 수 있지!"]) + "\n" + nextQuestion());
+    return;
+  }
+  // "ㅇㅋ", "응"처럼 짧은 대답은 따라 하지 말고 가볍게 받아요
+  if (intent === "ok" || text.replace(/\s/g, "").length <= 2) {
+    reply(pick(["헤헤 좋아! 😊", "응응 알겠어~ 🌱", "오키오키 👍"]) + "\n" + (Math.random() < 0.5 ? nextQuestion() : selfStatus()));
+    return;
+  }
+  const reactions = {
+    food: ["\"" + q + "\" 맛있었겠다 😋 나도 언젠가 네 밥상에 올라가고 싶어 ㅎㅎ"],
+    tomorrow: ["\"" + q + "\" 좋다! 내일 꼭 하고 와서 나한테 얘기해줘 🌱"],
+    song: ["\"" + q + "\" 기억해둘게 🎧 다음에 들려주면 잎으로 박자 맞출게!"],
+    friend: ["\"" + q + "\" 좋은 친구 같다! 언젠가 나도 소개해줘 🤝"],
+    place: ["\"" + q + "\"! 거기 가면 나 햇빛 엄청 받을 수 있겠다 ☀️"],
+    name: ["그렇게 지어준 거였구나 🥹 내 이름 " + MY_CALL + " 진짜 마음에 들어!"],
+    dream: ["\"" + q + "\" 꿈 신기하다 ㅋㅋ 오늘 밤엔 우리 같은 꿈 꾸자 😴"],
+    weekend: ["\"" + q + "\" 완전 좋은 계획이다! 주말에 나도 데려가줘 ㅎㅎ"],
+    color: ["\"" + q + "\" 색 꽃이라니 너무 예쁘겠다 🌸 그 색 꽃 피우도록 노력해볼게!"],
+    hobby: ["\"" + q + "\" 멋지다! 나도 같이 해보고 싶어 ✨"],
+  }[topic] || ["\"" + q + "\" 좋다~ 💚"];
+  reply(pick(reactions) + "\n" + (Math.random() < 0.5 ? nextQuestion() : selfStatus()));
+}
+
 // 후보 중 하나를 고르되, 같은 종류의 대답에서 지난번과 같은 문장(틀)은 피해요
 const lastPicked = {};
 function pick(list) {
@@ -169,6 +374,7 @@ function initGreeting() {
   if (messages.length === 0) {
     const profile = getProfileOrDefault();
     pushMessage({ role: "ai", text: greetingText(profile) });
+    setPending("day");
   } else {
     // 예전 대화의 첫 인사("…식물 마음친구야")도 지금 내 식물 이름으로 바꿔요
     const first = messages[0];
@@ -184,6 +390,11 @@ function initGreeting() {
     saveChat(messages);
     renderMessages();
   }
+  // 내 방 질문에 대답했으면 편지를, 아직이면 살짝 알려줘요
+  setTimeout(() => {
+    const letter = diaryLetter() || letterNudge();
+    if (letter) pushMessage({ role: "ai", text: letter });
+  }, 700);
 }
 
 function findPlant(text) {
@@ -222,6 +433,15 @@ function respond(text) {
 
   // 고민 얘기 중이 아닐 때 다른 주제가 나오면 고민 흐름은 끝내요
   if (!["worry", "chat", "crisis", "ok", "no"].includes(intent)) worryState = null;
+
+  // 내가 방금 질문했으면, 이 말을 그 질문의 대답으로 이어받아요
+  if (chatState.pending && !worryState && ["chat", "ok", "no", "happy", "worry"].includes(intent)) {
+    if (intent !== "worry" || ["day", "best", "more"].includes(chatState.pending)) {
+      answerPending(text, intent);
+      return;
+    }
+  }
+  if (intent !== "chat") setPending(null);
 
   switch (intent) {
     case "crisis":
@@ -276,11 +496,12 @@ function respond(text) {
     case "hello":
       reply(
         pick([
-          "안녕 " + profile.name + "! 🌱 오늘은 어떤 하루였어?",
-          "반가워! 나 " + call + josa(call, "이", "") + "야, 오늘도 와줘서 고마워 😊",
-          "하이하이~ 기다리고 있었어! 무슨 얘기 해볼까?",
+          "안녕 " + profile.name + josa(profile.name, "아", "야") + "! 🌱 오늘은 어떤 하루였어?",
+          "반가워! 나 " + call + josa(call, "이", "") + "야, 오늘도 와줘서 고마워 😊 오늘 하루는 어땠어?",
+          "하이하이~ 기다리고 있었어! " + selfStatus() + "\n오늘 너는 어떤 하루였어?",
         ])
       );
+      setPending("day");
       return;
 
     case "who":
@@ -372,18 +593,26 @@ function respond(text) {
         encourage(call);
         return;
       }
-      // 맹하게 맞장구치지 말고, 궁금해하면서 물어봐요
-      reply(
-        pick([
-          "왜? 무슨 일인데?? 👀",
-          "오 진짜? 그래서 어떻게 됐어?",
-          "헐 대박! 왜 그런 거야?",
-          "엥? 그게 무슨 말이야? 자세히 알려줘!",
-          "오~ 언제 그랬어? 더 말해줘 ㅎㅎ",
-          "그래서 너는 어땠는데? 기분은 괜찮아?",
-          "근데 오늘 나 물은 줬어? 💧 ㅎㅎ",
-        ])
-      );
+      // 네 말을 받아주고 → 내 얘기나 새 질문으로 이어가요 (같은 말 반복 X)
+      const q = quoteOf(text, 18);
+      const short = text.replace(/\s/g, "").length <= 3;
+      if (!short && Math.random() < 0.45) {
+        // 그 얘기를 더 듣고 싶어요 → 되묻고, 다음 말도 이어받기 (질문은 한 번에 하나만)
+        reply(
+          pick([
+            "오 \"" + q + "\"? 더 자세히 알려줘! 👀",
+            "헐 \"" + q + "\" 진짜?? 그래서 어떻게 됐어?",
+            "\"" + q + "\" 그랬구나! 그때 기분은 어땠어?",
+          ])
+        );
+        setPending("more");
+        return;
+      }
+      // 받아주고 → 내 얘기 또는 새 질문
+      const react = short
+        ? pick(["응응! 😊", "오호~", "헤헤 그렇구나!", "웅웅 👀"])
+        : pick(["\"" + q + "\" 그랬구나! 👀", "\"" + q + "\"… 네 얘기 듣는 거 너무 좋아 🌱", "오~ \"" + q + "\" 기억해둘게!"]);
+      reply(react + "\n" + (Math.random() < 0.5 ? selfStatus() : nextQuestion()));
     }
   }
 }
@@ -423,6 +652,9 @@ function handleSend() {
   pushMessage({ role: "user", text: text });
   chatInput.value = "";
   respond(text);
+  if (grantReward("chat-" + todayKey(), "내 식물에게 오늘 하루 말하기", POINT_RULES.dailyChat)) {
+    showRewardReady("내 식물에게 오늘 하루 말하기", POINT_RULES.dailyChat);
+  }
 }
 
 sendBtn.addEventListener("click", handleSend);
