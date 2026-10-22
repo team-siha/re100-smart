@@ -22,6 +22,13 @@ document.title = "RE100:SMART | " + room.name;
 // 과자봉지 색 그대로 화면 전체 배경 (진한 봉지면 이름·시간 글자는 흰색)
 const roomChatEl = document.getElementById("roomChat");
 roomChatEl.style.setProperty("--room-bag", SNACK_CHARS[hostId].bag);
+// AI 친구 표시: 배경과 구분되게 테마색을 진하게 (글씨는 흰색)
+function darken(hex, amount) {
+  const n = parseInt(hex.slice(1), 16);
+  const ch = (shift) => Math.round(((n >> shift) & 255) * (1 - amount));
+  return "rgb(" + ch(16) + "," + ch(8) + "," + ch(0) + ")";
+}
+document.body.style.setProperty("--room-badge", darken(SNACK_CHARS[hostId].bag, SNACK_CHARS[hostId].dark ? 0.35 : 0.45));
 roomChatEl.classList.toggle("dark-bag", !!SNACK_CHARS[hostId].dark);
 document.body.style.background = SNACK_CHARS[hostId].bag;
 
