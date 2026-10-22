@@ -1953,10 +1953,13 @@ button.char-tile { font-family: inherit; color: var(--text); width: 100%; }
 .room-chat .rc-stage, .room-chat .rc-messages { position: relative; z-index: 1; }
 /* 식물 친구들: 입력창 뒤에서 하나둘씩 빼꼼 (타이핑하면 쏙) */
 .room-chat .rc-stage { height: 64px; }
+/* 입력창 줄은 흰 바탕 없이 (입력칸 · 전송 버튼만 하얗게) */
+.chat-input-row.rc-input { background: transparent; box-shadow: none; }
+/* 빼꼼하는 식물은 입력칸 윗선에서 잘려 보여요 */
 .rc-peekers {
   position: fixed;
   left: 50%;
-  bottom: calc(62px + env(safe-area-inset-bottom));
+  bottom: calc(54px + env(safe-area-inset-bottom));
   width: 100%;
   max-width: 480px;
   height: 70px;
@@ -1965,24 +1968,92 @@ button.char-tile { font-family: inherit; color: var(--text); width: 100%; }
   overflow: hidden;
   pointer-events: none;
 }
+/* 입력칸 바로 위: 한 명씩 돌아가며 빼꼼 (두 손은 입력칸 모서리에 턱) */
 .rc-peekers .pk {
   position: absolute;
   bottom: 0;
-  width: 58px;
-  margin-left: -29px;
+  left: 34px;
+  width: 64px;
   transform: translateY(100%);
-  animation: plant-peek 6.5s ease-in-out infinite;
-  animation-delay: var(--d);
+  animation: plant-peek 5s ease-in-out infinite;
   transition: transform 0.3s ease;
 }
 .rc-peekers .pk img { width: 100%; display: block; }
 @keyframes plant-peek {
-  0%, 8% { transform: translateY(100%) rotate(0); }
-  16% { transform: translateY(22%) rotate(var(--r)); }
-  24% { transform: translateY(26%) rotate(calc(var(--r) * -1)); }
-  32% { transform: translateY(22%) rotate(var(--r)); }
-  42%, 100% { transform: translateY(100%) rotate(0); }
+  0%, 10% { transform: translateY(100%) rotate(0); }
+  22% { transform: translateY(34%) rotate(-6deg); }
+  34% { transform: translateY(38%) rotate(6deg); }
+  48% { transform: translateY(34%) rotate(-6deg); }
+  60%, 100% { transform: translateY(100%) rotate(0); }
 }
+/* 입력칸 윗선에 걸친 두 손 (빼꼼할 때만) */
+.rc-peek-hands {
+  position: fixed;
+  left: 50%;
+  bottom: calc(54px + env(safe-area-inset-bottom));
+  width: 100%;
+  max-width: 480px;
+  height: 0;
+  transform: translateX(-50%);
+  z-index: 41;
+  pointer-events: none;
+}
+.rc-peek-hands i {
+  position: absolute;
+  bottom: -7px;
+  left: 40px;
+  width: 15px;
+  height: 13px;
+  border-radius: 8px 8px 6px 6px;
+  background: #fffaf0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25), inset 0 -2px 0 rgba(0, 0, 0, 0.06);
+  opacity: 0;
+  transform: translateY(6px);
+  animation: hand-grab 5s ease-in-out infinite;
+}
+.rc-peek-hands i + i { left: 77px; }
+@keyframes hand-grab {
+  0%, 16% { opacity: 0; transform: translateY(6px); }
+  22%, 50% { opacity: 1; transform: translateY(0); }
+  58%, 100% { opacity: 0; transform: translateY(6px); }
+}
+body.rc-typing .rc-peek-hands i { animation: none; opacity: 0; }
+/* 전송 버튼 위: 작은 식물이 걸터앉아 살랑살랑
+   그림 아래쪽(원래 서 있는 다리)은 버튼 윗선에서 잘라서 앉은 모습으로, 다리는 아래 .leg 두 개만 */
+.rc-peekers .sitter {
+  position: absolute;
+  right: 25px;
+  bottom: 0;
+  width: 42px;
+  height: 37px;
+  overflow: hidden;
+  transform-origin: 50% 100%;
+  animation: sitter-sway 2.6s ease-in-out infinite;
+}
+.rc-peekers .sitter img { width: 100%; display: block; }
+@keyframes sitter-sway {
+  0%, 100% { transform: rotate(-5deg); }
+  50% { transform: rotate(5deg); }
+}
+/* 앉은 식물의 두 다리: 전송 버튼 앞으로 쫑 내려와서 번갈아 대롱대롱 */
+.rc-peek-hands .leg {
+  position: absolute;
+  top: -3px;
+  right: 50px;
+  width: 7px;
+  height: 13px;
+  border-radius: 4px 4px 5px 5px;
+  background: #fffaf0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  transform-origin: 50% 0;
+  animation: leg-swing 0.9s ease-in-out infinite alternate;
+}
+.rc-peek-hands .leg + .leg { right: 39px; animation-direction: alternate-reverse; }
+@keyframes leg-swing {
+  from { transform: rotate(18deg); }
+  to { transform: rotate(-18deg); }
+}
+/* 타이핑 중엔 쏙 숨어요 */
 body.rc-typing .rc-peekers .pk { animation: none; transform: translateY(100%); }
 .rc-stage-name {
   position: absolute;

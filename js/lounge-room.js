@@ -32,7 +32,7 @@ const PATTERN_SPOTS = [
   [80, 33, 160, 12],
   [22, 54, 150, 8],
   [80, 74, 155, -10],
-  [26, 93, 150, -6],
+  [56, 90, 150, -6],
 ];
 document.getElementById("snackPattern").innerHTML = PATTERN_SPOTS.map(
   ([x, y, size, rot], i) =>
@@ -40,19 +40,18 @@ document.getElementById("snackPattern").innerHTML = PATTERN_SPOTS.map(
     getSnackImg(hostId) + "</span>"
 ).join("");
 
-// 식물 친구들이 입력창 뒤에서 하나둘씩 빼꼼 → 타이핑을 시작하면 쏙 숨어요
-const PEEKERS = [
-  // [식물, 가로 %, 기울기 deg]
-  ["cheongSangchu", 12, -8],
-  ["basil", 32, 6],
-  ["jeokSangchu", 52, -4],
-  ["mint", 72, 8],
-  ["romaine", 90, -6],
-];
-document.getElementById("peekers").innerHTML = PEEKERS.map(
-  ([id, x, rot], i) =>
-    '<span class="pk" style="left:' + x + "%;--r:" + rot + "deg;--d:" + i * 1.1 + 's"><img src="images/chars/' + id + '.webp" alt="" /></span>'
-).join("");
+// 식물 친구들: 입력칸 위에서 한 명씩 돌아가며 빼꼼(타이핑하면 쏙) + 전송 버튼 위에 한 명 앉아서 다리 대롱대롱
+const PEEK_ORDER = ["cheongSangchu", "basil", "jeokSangchu", "mint", "romaine"];
+const SITTER = PEEK_ORDER[Math.floor(Math.random() * PEEK_ORDER.length)];
+document.getElementById("peekers").innerHTML =
+  '<span class="pk left"><img src="images/chars/' + PEEK_ORDER[0] + '.webp" alt="" /></span>' +
+  '<span class="sitter"><img src="images/chars/' + SITTER + '.webp" alt="" /></span>';
+// 한 번 빼꼼하고 들어갈 때마다 다음 식물로 바꿔요
+let peekIdx = 0;
+document.querySelector(".rc-peekers .pk.left").addEventListener("animationiteration", (e) => {
+  peekIdx = (peekIdx + 1) % PEEK_ORDER.length;
+  e.currentTarget.querySelector("img").src = "images/chars/" + PEEK_ORDER[peekIdx] + ".webp";
+});
 
 const chatWindow = document.getElementById("chatWindow");
 const chatInput = document.getElementById("chatInput");
